@@ -7,7 +7,8 @@ from smc.market_structure import MarketStructure
 
 class Scanner:
 
-    def __init__(self.trend = TrendFilter()):
+    def __init__(self):
+        self.trend = TrendFilter()
         self.liquidity = LiquiditySweep()
         self.orderblock = OrderBlock()
         self.fvg = FairValueGap()
