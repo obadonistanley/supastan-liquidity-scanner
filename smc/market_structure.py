@@ -5,20 +5,29 @@ class MarketStructure:
 
     def detect(self, candles):
 
-        if len(candles) < 6:
+        if len(candles) < 10:
             return None
 
-        highs = [c["high"] for c in candles[-6:]]
-        lows = [c["low"] for c in candles[-6:]]
-
+        recent = candles[-10:-1]
         current = candles[-1]
 
-        # Break of Structure (Bullish)
-        if current["high"] > max(highs[:-1]):
+        previous_high = max(c["high"] for c in recent)
+        previous_low = min(c["low"] for c in recent)
+
+        # Bullish Market Structure Shift
+        # Price breaks high and closes above it
+        if (
+            current["high"] > previous_high
+            and current["close"] > previous_high
+        ):
             return "BUY"
 
-        # Break of Structure (Bearish)
-        if current["low"] < min(lows[:-1]):
+        # Bearish Market Structure Shift
+        # Price breaks low and closes below it
+        if (
+            current["low"] < previous_low
+            and current["close"] < previous_low
+        ):
             return "SELL"
 
         return None
