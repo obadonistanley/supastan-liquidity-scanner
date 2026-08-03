@@ -20,7 +20,7 @@ def home():
 @app.get("/scan/{symbol}")
 def scan_market(symbol: str):
 
-    url = f"https://api.binance.com/api/v3/klines?symbol={symbol.upper()}&interval=15m&limit=50"
+    url = f"https://api.binance.com/api/v3/klines?symbol={symbol.upper()}&interval=15m&limit=250"
 
     response = requests.get(url)
     data = response.json()
