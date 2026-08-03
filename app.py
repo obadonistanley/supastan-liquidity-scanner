@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 import requests
 
+from scanner import Scanner
+
 app = FastAPI(title="Supastan AI Liquidity Scanner")
+
+scanner = Scanner()
 
 
 @app.get("/")
@@ -9,7 +13,7 @@ def home():
     return {
         "status": "online",
         "scanner": "Supastan AI Liquidity Scanner",
-        "version": "2.0"
+        "version": "3.0"
     }
 
 
@@ -19,7 +23,6 @@ def scan_market(symbol: str):
     url = f"https://api.binance.com/api/v3/klines?symbol={symbol.upper()}&interval=15m&limit=50"
 
     response = requests.get(url)
-
     data = response.json()
 
     candles = []
@@ -27,14 +30,17 @@ def scan_market(symbol: str):
     for candle in data:
         candles.append({
             "time": candle[0],
-            "open": candle[1],
-            "high": candle[2],
-            "low": candle[3],
-            "close": candle[4]
+            "open": float(candle[1]),
+            "high": float(candle[2]),
+            "low": float(candle[3]),
+            "close": float(candle[4])
         })
+
+    signal = scanner.scan(candles)
 
     return {
         "symbol": symbol.upper(),
         "timeframe": "15m",
-        "candles": candles
+        "signal": signal,
+        "candles": len(candles)
     }
