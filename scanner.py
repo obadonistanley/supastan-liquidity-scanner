@@ -47,13 +47,20 @@ class Scanner:
         score -= sell
 
 
-
         if score >= 2:
-            return "BUY"
+            signal = "BUY"
+
+        elif score <= -2:
+            signal = "SELL"
+
+        else:
+            signal = "NO TRADE"
 
 
-        if score <= -2:
-            return "SELL"
-
-
-        return "NO TRADE"
+        return {
+            "signal": signal,
+            "trend": trend,
+            "liquidity": liquidity_signal,
+            "structure": structure_signal,
+            "score": score
+        }
