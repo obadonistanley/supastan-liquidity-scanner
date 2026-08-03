@@ -1,3 +1,4 @@
+from utils.trend import TrendFilter
 from smc.liquidity import LiquiditySweep
 from smc.order_blocks import OrderBlock
 from smc.fvg import FairValueGap
