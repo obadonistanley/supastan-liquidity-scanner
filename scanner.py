@@ -1,5 +1,6 @@
 from utils.trend import TrendFilter
 from smc.liquidity import LiquiditySweep
+from smc.market_structure import MarketStructure
 
 
 class Scanner:
@@ -7,6 +8,8 @@ class Scanner:
     def __init__(self):
         self.trend = TrendFilter()
         self.liquidity = LiquiditySweep()
+        self.market = MarketStructure()
+
 
     def scan(self, candles):
 
@@ -14,18 +17,43 @@ class Scanner:
 
         trend = self.trend.detect(candles)
 
-        signal = self.liquidity.detect(candles)
+        liquidity_signal = self.liquidity.detect(candles)
 
-        if signal:
-            results.append(signal)
+        if liquidity_signal:
+            results.append(liquidity_signal)
+
+
+        structure_signal = self.market.detect(candles)
+
+        if structure_signal:
+            results.append(structure_signal)
+
 
         buy = results.count("BUY")
         sell = results.count("SELL")
 
-        if trend == "BULLISH" and buy > sell:
+
+        score = 0
+
+
+        if trend == "BULLISH":
+            score += 1
+
+        if trend == "BEARISH":
+            score -= 1
+
+
+        score += buy
+        score -= sell
+
+
+
+        if score >= 2:
             return "BUY"
 
-        if trend == "BEARISH" and sell > buy:
+
+        if score <= -2:
             return "SELL"
+
 
         return "NO TRADE"
