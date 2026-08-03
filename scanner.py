@@ -17,6 +17,7 @@ class Scanner:
 
         results = []
 
+        trend = self.trend.detect(candles)
         signal = self.liquidity.detect(candles)
         if signal:
             results.append(signal)
@@ -34,12 +35,12 @@ class Scanner:
             results.append(signal)
 
         buy = results.count("BUY")
-        sell = results.count("SELL")
+sell = results.count("SELL")
 
-        if buy > sell:
-            return "BUY"
+if trend == "BULLISH" and buy > sell:
+    return "BUY"
 
-        if sell > buy:
-            return "SELL"
+if trend == "BEARISH" and sell > buy:
+    return "SELL"
 
-        return "NO TRADE"
+return "NO TRADE"
