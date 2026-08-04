@@ -6,7 +6,6 @@ from strategy import Strategy
 
 app = FastAPI(title="Supastan AI Liquidity Scanner")
 
-
 scanner = Scanner()
 deriv = DerivAPI()
 signal_generator = SignalGenerator()
@@ -75,35 +74,3 @@ def run_strategy(symbol: str, mode: str):
     )
 
     return result
-
-
-@app.get("/testtelegram")
-def test_telegram():
-
-    signal = {
-
-        "symbol": "R_75",
-
-        "mode": "TEST",
-
-        "final_signal": "BUY",
-
-        "trade_plan": {
-
-            "entry": "SMC Test Entry",
-
-            "stop_loss": "Test Stop Loss",
-
-            "take_profit": "Test Take Profit",
-
-            "risk_reward": "1:3"
-
-        }
-
-    }
-
-    send_signal(signal)
-
-    return {
-        "status": "Telegram test sent successfully"
-    }
