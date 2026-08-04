@@ -1,10 +1,8 @@
-from fastapi import FastAPI
-
+from from fastapi import FastAPI
 from scanner import Scanner
 from data.deriv import DerivAPI
 from signals.generator import SignalGenerator
 from strategy import Strategy
-from telegram_bot import send_signal
 
 
 app = FastAPI(title="Supastan AI Liquidity Scanner")
