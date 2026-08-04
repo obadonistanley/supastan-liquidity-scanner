@@ -12,9 +12,7 @@ class Strategy:
     def analyze(self, candles):
 
         if not candles:
-            return {
-                "signal": "NO DATA"
-            }
+            return "NO DATA"
 
         return self.scanner.scan(candles)
 
@@ -109,11 +107,37 @@ class Strategy:
 
 
 
+        signals = [
+            sweep_signal,
+            confirmation_signal,
+            entry_signal
+        ]
+
+
+        buy_count = signals.count("BUY")
+
+        sell_count = signals.count("SELL")
+
+
+        final_signal = "NO TRADE"
+
+
+        if buy_count >= 2:
+            final_signal = "BUY"
+
+
+        elif sell_count >= 2:
+            final_signal = "SELL"
+
+
+
         return {
 
             "symbol": symbol,
 
             "mode": mode,
+
+            "final_signal": final_signal,
 
             "sweep_analysis": sweep_signal,
 
