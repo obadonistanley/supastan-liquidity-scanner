@@ -9,17 +9,29 @@ class Strategy:
         self.deriv = DerivAPI()
 
 
+    def analyze(self, candles):
+
+        if not candles:
+            return {
+                "signal": "NO DATA"
+            }
+
+        return self.scanner.scan(candles)
+
+
+
     def run(self, symbol, mode):
+
 
         if mode == "D1_H4":
 
-            higher_tf = self.deriv.get_candles(
+            sweep_tf = self.deriv.get_candles(
                 symbol,
                 count=200,
                 granularity=86400
             )
 
-            h4_tf = self.deriv.get_candles(
+            confirmation_tf = self.deriv.get_candles(
                 symbol,
                 count=200,
                 granularity=14400
@@ -34,13 +46,13 @@ class Strategy:
 
         elif mode == "H1":
 
-            higher_tf = self.deriv.get_candles(
+            sweep_tf = self.deriv.get_candles(
                 symbol,
                 count=200,
                 granularity=3600
             )
 
-            h4_tf = None
+            confirmation_tf = None
 
             entry_tf = self.deriv.get_candles(
                 symbol,
@@ -51,13 +63,13 @@ class Strategy:
 
         elif mode == "M5":
 
-            higher_tf = self.deriv.get_candles(
+            sweep_tf = self.deriv.get_candles(
                 symbol,
                 count=200,
                 granularity=300
             )
 
-            h4_tf = None
+            confirmation_tf = None
 
             entry_tf = self.deriv.get_candles(
                 symbol,
@@ -67,23 +79,46 @@ class Strategy:
 
 
         else:
+
             return {
-                "error": "Invalid strategy mode"
+                "error": "Choose D1_H4, H1, or M5"
             }
 
 
-        sweep_analysis = self.scanner.scan(
-            higher_tf
+
+        sweep_signal = self.analyze(
+            sweep_tf
         )
 
 
-        entry_analysis = self.scanner.scan(
+        if confirmation_tf:
+
+            confirmation_signal = self.analyze(
+                confirmation_tf
+            )
+
+        else:
+
+            confirmation_signal = None
+
+
+
+        entry_signal = self.analyze(
             entry_tf
         )
 
 
+
         return {
+
+            "symbol": symbol,
+
             "mode": mode,
-            "sweep_timeframe_signal": sweep_analysis,
-            "entry_timeframe_signal": entry_analysis
+
+            "sweep_analysis": sweep_signal,
+
+            "confirmation_analysis": confirmation_signal,
+
+            "entry_analysis": entry_signal
+
         }
