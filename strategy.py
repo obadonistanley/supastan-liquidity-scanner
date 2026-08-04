@@ -7,9 +7,6 @@ class Strategy:
     def __init__(self):
         self.scanner = Scanner()
         self.deriv = DerivAPI()
-        self.risk = RiskManager()
-
-
 
     def analyze(self, candles):
 
@@ -20,20 +17,14 @@ class Strategy:
 
         return self.scanner.scan(candles)
 
-
-
     def get_signal(self, analysis):
 
         if isinstance(analysis, dict):
-
             return analysis.get("signal")
 
         return analysis
 
-
-
     def run(self, symbol, mode):
-
 
         if mode == "D1_H4":
 
@@ -55,8 +46,6 @@ class Strategy:
                 granularity=300
             )
 
-
-
         elif mode == "H1":
 
             sweep_tf = self.deriv.get_candles(
@@ -72,8 +61,6 @@ class Strategy:
                 count=200,
                 granularity=300
             )
-
-
 
         elif mode == "M5":
 
@@ -91,102 +78,34 @@ class Strategy:
                 granularity=60
             )
 
-
-
         else:
 
             return {
                 "error": "Choose D1_H4, H1, or M5"
             }
 
-
-
         sweep_analysis = self.analyze(sweep_tf)
-
         entry_analysis = self.analyze(entry_tf)
 
-
-
         if confirmation_tf:
-
-            confirmation_analysis = self.analyze(
-                confirmation_tf
-            )
-
+            confirmation_analysis = self.analyze(confirmation_tf)
         else:
-
             confirmation_analysis = None
 
-
-
-        sweep_signal = self.get_signal(
-            sweep_analysis
-        )
-
-        entry_signal = self.get_signal(
-            entry_analysis
-        )
-
-
-        confirmation_signal = self.get_signal(
-            confirmation_analysis
-        )
-
-
+        sweep_signal = self.get_signal(sweep_analysis)
+        entry_signal = self.get_signal(entry_analysis)
+        confirmation_signal = self.get_signal(confirmation_analysis)
 
         final_signal = "NO TRADE"
 
-
-
-        # H1 and M5 model
-        if (
-            sweep_signal == "BUY"
-            and entry_signal == "BUY"
-        ):
+        if sweep_signal == "BUY" and entry_signal == "BUY":
             final_signal = "BUY"
 
-
-
-        elif (
-            sweep_signal == "SELL"
-            and entry_signal == "SELL"
-        ):
+        elif sweep_signal == "SELL" and entry_signal == "SELL":
             final_signal = "SELL"
 
-
-
-        # D1/H4 requires all confirmations
-
         if mode == "D1_H4":
-
             if not (
                 sweep_signal == confirmation_signal == entry_signal
             ):
-                final_signal = "NO TRADE"
-
-
-
-        trade_plan = self.risk.calculate(
-            entry_tf,
-            final_signal
-        )
-
-
-
-        return {
-
-            "symbol": symbol,
-
-            "mode": mode,
-
-            "final_signal": final_signal,
-
-            "trade_plan": trade_plan,
-
-            "sweep_analysis": sweep_analysis,
-
-            "confirmation_analysis": confirmation_analysis,
-
-            "entry_analysis": entry_analysis
-
-        }
+                final_signal = "NO TRA
