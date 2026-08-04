@@ -1,5 +1,6 @@
 from scanner import Scanner
 from data.deriv import DerivAPI
+from utils.risk import RiskManager
 
 
 class Strategy:
@@ -7,6 +8,7 @@ class Strategy:
     def __init__(self):
         self.scanner = Scanner()
         self.deriv = DerivAPI()
+        self.risk = RiskManager()
 
 
 
@@ -105,9 +107,12 @@ class Strategy:
         entry_analysis = self.analyze(entry_tf)
 
 
+
         if confirmation_tf:
 
-            confirmation_analysis = self.analyze(confirmation_tf)
+            confirmation_analysis = self.analyze(
+                confirmation_tf
+            )
 
         else:
 
@@ -134,8 +139,7 @@ class Strategy:
 
 
 
-        # Higher timeframe direction + entry confirmation
-
+        # H1 and M5 model
         if (
             sweep_signal == "BUY"
             and entry_signal == "BUY"
@@ -152,7 +156,7 @@ class Strategy:
 
 
 
-        # D1/H4 requires confirmation also
+        # D1/H4 requires all confirmations
 
         if mode == "D1_H4":
 
@@ -163,6 +167,13 @@ class Strategy:
 
 
 
+        trade_plan = self.risk.calculate(
+            entry_tf,
+            final_signal
+        )
+
+
+
         return {
 
             "symbol": symbol,
@@ -170,6 +181,8 @@ class Strategy:
             "mode": mode,
 
             "final_signal": final_signal,
+
+            "trade_plan": trade_plan,
 
             "sweep_analysis": sweep_analysis,
 
