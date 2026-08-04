@@ -85,27 +85,71 @@ class Strategy:
             }
 
         sweep_analysis = self.analyze(sweep_tf)
+
         entry_analysis = self.analyze(entry_tf)
 
         if confirmation_tf:
-            confirmation_analysis = self.analyze(confirmation_tf)
+
+            confirmation_analysis = self.analyze(
+                confirmation_tf
+            )
+
         else:
+
             confirmation_analysis = None
 
-        sweep_signal = self.get_signal(sweep_analysis)
-        entry_signal = self.get_signal(entry_analysis)
-        confirmation_signal = self.get_signal(confirmation_analysis)
+        sweep_signal = self.get_signal(
+            sweep_analysis
+        )
+
+        entry_signal = self.get_signal(
+            entry_analysis
+        )
+
+        confirmation_signal = self.get_signal(
+            confirmation_analysis
+        )
 
         final_signal = "NO TRADE"
 
-        if sweep_signal == "BUY" and entry_signal == "BUY":
+        # H1 and M5 model
+        if (
+            sweep_signal == "BUY"
+            and entry_signal == "BUY"
+        ):
             final_signal = "BUY"
 
-        elif sweep_signal == "SELL" and entry_signal == "SELL":
+        elif (
+            sweep_signal == "SELL"
+            and entry_signal == "SELL"
+        ):
             final_signal = "SELL"
 
+        # D1/H4 model requires all three timeframes
         if mode == "D1_H4":
-            if not (
-                sweep_signal == confirmation_signal == entry_signal
+
+            if (
+                sweep_signal == confirmation_signal
+                and confirmation_signal == entry_signal
+                and sweep_signal in ["BUY", "SELL"]
             ):
-                final_signal = "NO TRA
+                final_signal = sweep_signal
+
+            else:
+                final_signal = "NO TRADE"
+
+        return {
+
+            "symbol": symbol,
+
+            "mode": mode,
+
+            "final_signal": final_signal,
+
+            "sweep_analysis": sweep_analysis,
+
+            "confirmation_analysis": confirmation_analysis,
+
+            "entry_analysis": entry_analysis
+
+        }
