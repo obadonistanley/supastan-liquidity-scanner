@@ -1,9 +1,8 @@
-from from fastapi import FastAPI
+from fastapi import FastAPI
 from scanner import Scanner
 from data.deriv import DerivAPI
 from signals.generator import SignalGenerator
 from strategy import Strategy
-
 
 app = FastAPI(title="Supastan AI Liquidity Scanner")
 
