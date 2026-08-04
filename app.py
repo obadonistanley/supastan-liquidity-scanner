@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from scanner import Scanner
-import random
-import time
+from data.deriv import DerivAPI
+
 
 app = FastAPI(title="Supastan AI Liquidity Scanner")
 
 scanner = Scanner()
+deriv = DerivAPI()
 
 
 @app.get("/")
@@ -17,31 +18,13 @@ def home():
     }
 
 
-def get_deriv_candles(symbol: str):
-    """
-    Temporary candle generator.
-    Replace with Deriv API WebSocket connection.
-    """
+def get_deriv_candles(symbol):
 
-    candles = []
-
-    price = 10000
-
-    for i in range(250):
-        open_price = price
-        high = open_price + random.randint(1, 50)
-        low = open_price - random.randint(1, 50)
-        close = random.randint(low, high)
-
-        candles.append({
-            "time": int(time.time()) - (i * 900),
-            "open": float(open_price),
-            "high": float(high),
-            "low": float(low),
-            "close": float(close)
-        })
-
-        price = close
+    candles = deriv.get_candles(
+        symbol=symbol,
+        count=250,
+        granularity=900
+    )
 
     return candles
 
@@ -51,7 +34,15 @@ def scan_market(symbol: str):
 
     candles = get_deriv_candles(symbol.upper())
 
+    if not candles:
+        return {
+            "symbol": symbol.upper(),
+            "error": "No candle data received from Deriv API"
+        }
+
+
     signal = scanner.scan(candles)
+
 
     return {
         "symbol": symbol.upper(),
