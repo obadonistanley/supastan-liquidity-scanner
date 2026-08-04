@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from scanner import Scanner
 from data.deriv import DerivAPI
 from signals.generator import SignalGenerator
+from strategy import Strategy
 
 
 app = FastAPI(title="Supastan AI Liquidity Scanner")
@@ -11,6 +12,7 @@ app = FastAPI(title="Supastan AI Liquidity Scanner")
 scanner = Scanner()
 deriv = DerivAPI()
 signal_generator = SignalGenerator()
+strategy = Strategy()
 
 
 @app.get("/")
@@ -49,7 +51,6 @@ def scan_market(symbol: str):
     raw_signal = scanner.scan(candles)
 
 
-    # Extract direction from scanner result
     if isinstance(raw_signal, dict):
         direction = raw_signal["signal"]
     else:
@@ -70,3 +71,15 @@ def scan_market(symbol: str):
         "trade_setup": trade_setup,
         "candles": len(candles)
     }
+
+
+
+@app.get("/strategy/{symbol}/{mode}")
+def run_strategy(symbol: str, mode: str):
+
+    result = strategy.run(
+        symbol.upper(),
+        mode.upper()
+    )
+
+    return result
