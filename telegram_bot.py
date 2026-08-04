@@ -2,22 +2,20 @@ import os
 import requests
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-CHAT_ID = "-1004474177840"
 
+def send_signal(result):
 
-def send_telegram(result):
+    if not BOT_TOKEN or not CHAT_ID:
+        return
 
     message = f"""
 🚨 SUPASTAN AI SIGNAL
 
-Symbol: {result['symbol']}
-Mode: {result['mode']}
-
-Signal: {result['final_signal']}
-
-Confidence:
-{result['entry_analysis']['confidence']}
+📊 Symbol: {result['symbol']}
+📈 Mode: {result['mode']}
+🎯 Signal: {result['final_signal']}
 
 Entry:
 {result['trade_plan']['entry']}
