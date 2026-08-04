@@ -1,6 +1,5 @@
 from scanner import Scanner
 from data.deriv import DerivAPI
-from telegram_bot import send_telegram
 
 
 class Strategy:
@@ -89,16 +88,27 @@ class Strategy:
         entry_analysis = self.analyze(entry_tf)
 
         if confirmation_tf:
-            confirmation_analysis = self.analyze(confirmation_tf)
+            confirmation_analysis = self.analyze(
+                confirmation_tf
+            )
         else:
             confirmation_analysis = None
 
-        sweep_signal = self.get_signal(sweep_analysis)
-        entry_signal = self.get_signal(entry_analysis)
-        confirmation_signal = self.get_signal(confirmation_analysis)
+        sweep_signal = self.get_signal(
+            sweep_analysis
+        )
+
+        entry_signal = self.get_signal(
+            entry_analysis
+        )
+
+        confirmation_signal = self.get_signal(
+            confirmation_analysis
+        )
 
         final_signal = "NO TRADE"
 
+        # H1 and M5 models
         if (
             sweep_signal == "BUY"
             and entry_signal == "BUY"
@@ -111,6 +121,7 @@ class Strategy:
         ):
             final_signal = "SELL"
 
+        # D1/H4 model requires all three timeframes
         if mode == "D1_H4":
 
             if (
@@ -120,32 +131,4 @@ class Strategy:
             ):
                 final_signal = sweep_signal
             else:
-                final_signal = "NO TRADE"
-
-        result = {
-
-            "symbol": symbol,
-
-            "mode": mode,
-
-            "final_signal": final_signal,
-
-            "sweep_analysis": sweep_analysis,
-
-            "confirmation_analysis": confirmation_analysis,
-
-            "entry_analysis": entry_analysis,
-
-            "trade_plan": {
-                "entry": "SMC Entry Zone",
-                "stop_loss": "Below/Above Liquidity Sweep",
-                "take_profit": "Minimum 1:3 RR",
-                "risk_reward": "1:3+"
-            }
-
-        }
-
-        if final_signal != "NO TRADE":
-            send_telegram(result)
-
-        return result
+                final_signal = "NO TRA
