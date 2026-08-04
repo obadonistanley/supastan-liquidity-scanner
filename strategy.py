@@ -29,19 +29,19 @@ class Strategy:
         if mode == "D1_H4":
 
             sweep_tf = self.deriv.get_candles(
-                symbol,
+                symbol=symbol,
                 count=200,
                 granularity=86400
             )
 
             confirmation_tf = self.deriv.get_candles(
-                symbol,
+                symbol=symbol,
                 count=200,
                 granularity=14400
             )
 
             entry_tf = self.deriv.get_candles(
-                symbol,
+                symbol=symbol,
                 count=200,
                 granularity=300
             )
@@ -49,7 +49,7 @@ class Strategy:
         elif mode == "H1":
 
             sweep_tf = self.deriv.get_candles(
-                symbol,
+                symbol=symbol,
                 count=200,
                 granularity=3600
             )
@@ -57,7 +57,7 @@ class Strategy:
             confirmation_tf = None
 
             entry_tf = self.deriv.get_candles(
-                symbol,
+                symbol=symbol,
                 count=200,
                 granularity=300
             )
@@ -65,7 +65,7 @@ class Strategy:
         elif mode == "M5":
 
             sweep_tf = self.deriv.get_candles(
-                symbol,
+                symbol=symbol,
                 count=200,
                 granularity=300
             )
@@ -73,7 +73,7 @@ class Strategy:
             confirmation_tf = None
 
             entry_tf = self.deriv.get_candles(
-                symbol,
+                symbol=symbol,
                 count=200,
                 granularity=60
             )
@@ -88,40 +88,28 @@ class Strategy:
         entry_analysis = self.analyze(entry_tf)
 
         if confirmation_tf:
-            confirmation_analysis = self.analyze(
-                confirmation_tf
-            )
+            confirmation_analysis = self.analyze(confirmation_tf)
         else:
             confirmation_analysis = None
 
-        sweep_signal = self.get_signal(
-            sweep_analysis
-        )
+        sweep_signal = self.get_signal(sweep_analysis)
+        entry_signal = self.get_signal(entry_analysis)
 
-        entry_signal = self.get_signal(
-            entry_analysis
-        )
-
-        confirmation_signal = self.get_signal(
-            confirmation_analysis
-        )
+        if confirmation_analysis:
+            confirmation_signal = self.get_signal(confirmation_analysis)
+        else:
+            confirmation_signal = None
 
         final_signal = "NO TRADE"
 
-        # H1 and M5 models
-        if (
-            sweep_signal == "BUY"
-            and entry_signal == "BUY"
-        ):
+        # H1 and M5 confirmation
+        if sweep_signal == "BUY" and entry_signal == "BUY":
             final_signal = "BUY"
 
-        elif (
-            sweep_signal == "SELL"
-            and entry_signal == "SELL"
-        ):
+        elif sweep_signal == "SELL" and entry_signal == "SELL":
             final_signal = "SELL"
 
-        # D1/H4 model requires all three timeframes
+        # D1/H4 requires all three timeframes
         if mode == "D1_H4":
 
             if (
@@ -131,4 +119,19 @@ class Strategy:
             ):
                 final_signal = sweep_signal
             else:
-                final_signal = "NO TRA
+                final_signal = "NO TRADE"
+
+        return {
+            "symbol": symbol,
+            "mode": mode,
+            "final_signal": final_signal,
+            "sweep_analysis": sweep_analysis,
+            "confirmation_analysis": confirmation_analysis,
+            "entry_analysis": entry_analysis,
+            "trade_plan": {
+                "entry": "SMC Entry Zone",
+                "stop_loss": "Below/Above Liquidity Sweep",
+                "take_profit": "Minimum 1:3 RR",
+                "risk_reward": "1:3+"
+            }
+        }
