@@ -57,7 +57,7 @@ class Scanner:
             score += 1
 
 
-        if trend == "BEARISH":
+        elif trend == "BEARISH":
             score -= 1
 
 
@@ -68,25 +68,77 @@ class Scanner:
 
 
 
+        # Calculate confidence
+
+        confidence = abs(score) * 20
+
+
+        if confidence > 100:
+            confidence = 100
+
+
+
+        # Final signal
+
         if score >= 3:
 
             signal = "BUY"
+
+            reason = (
+                "Bullish alignment: "
+                "trend + SMC confirmations"
+            )
 
 
         elif score <= -3:
 
             signal = "SELL"
 
+            reason = (
+                "Bearish alignment: "
+                "trend + SMC confirmations"
+            )
+
 
         else:
 
             signal = "NO TRADE"
+
+            missing = []
+
+
+            if not liquidity_signal:
+                missing.append("Liquidity Sweep")
+
+
+            if not structure_signal:
+                missing.append("Market Structure")
+
+
+            if not order_block_signal:
+                missing.append("Order Block")
+
+
+            if missing:
+
+                reason = (
+                    "Waiting for: "
+                    + ", ".join(missing)
+                )
+
+            else:
+
+                reason = "Confirmation not aligned"
 
 
 
         return {
 
             "signal": signal,
+
+            "confidence": f"{confidence}%",
+
+            "reason": reason,
 
             "trend": trend,
 
