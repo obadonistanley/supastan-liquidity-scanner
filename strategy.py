@@ -1,6 +1,5 @@
 from scanner import Scanner
 from data.deriv import DerivAPI
-from utils.risk import RiskManager
 
 
 class Strategy:
