@@ -1,6 +1,6 @@
 from scanner import Scanner
 from data.deriv import DerivAPI
-from telegram_bot import send_signal
+from telegram_bot import send_telegram
 
 
 class Strategy:
@@ -86,34 +86,19 @@ class Strategy:
             }
 
         sweep_analysis = self.analyze(sweep_tf)
-
         entry_analysis = self.analyze(entry_tf)
 
         if confirmation_tf:
-
-            confirmation_analysis = self.analyze(
-                confirmation_tf
-            )
-
+            confirmation_analysis = self.analyze(confirmation_tf)
         else:
-
             confirmation_analysis = None
 
-        sweep_signal = self.get_signal(
-            sweep_analysis
-        )
-
-        entry_signal = self.get_signal(
-            entry_analysis
-        )
-
-        confirmation_signal = self.get_signal(
-            confirmation_analysis
-        )
+        sweep_signal = self.get_signal(sweep_analysis)
+        entry_signal = self.get_signal(entry_analysis)
+        confirmation_signal = self.get_signal(confirmation_analysis)
 
         final_signal = "NO TRADE"
 
-        # H1 and M5 model
         if (
             sweep_signal == "BUY"
             and entry_signal == "BUY"
@@ -126,7 +111,6 @@ class Strategy:
         ):
             final_signal = "SELL"
 
-        # D1/H4 model requires all three timeframes
         if mode == "D1_H4":
 
             if (
@@ -135,7 +119,6 @@ class Strategy:
                 and sweep_signal in ["BUY", "SELL"]
             ):
                 final_signal = sweep_signal
-
             else:
                 final_signal = "NO TRADE"
 
@@ -163,6 +146,6 @@ class Strategy:
         }
 
         if final_signal != "NO TRADE":
-            send_signal(result)
+            send_telegram(result)
 
         return result
