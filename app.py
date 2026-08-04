@@ -1,10 +1,16 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 from scanner import Scanner
 from data.deriv import DerivAPI
 from signals.generator import SignalGenerator
 from strategy import Strategy
 
 app = FastAPI(title="Supastan AI Liquidity Scanner")
+
+# Serve static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 scanner = Scanner()
 deriv = DerivAPI()
@@ -14,11 +20,7 @@ strategy = Strategy()
 
 @app.get("/")
 def home():
-    return {
-        "status": "online",
-        "scanner": "Supastan AI Liquidity Scanner",
-        "version": "3.0"
-    }
+    return FileResponse("static/index.html")
 
 
 def get_deriv_candles(symbol):
@@ -30,6 +32,15 @@ def get_deriv_candles(symbol):
     )
 
     return candles
+
+
+@app.get("/api")
+def api_status():
+    return {
+        "status": "online",
+        "scanner": "Supastan AI Liquidity Scanner",
+        "version": "3.0"
+    }
 
 
 @app.get("/scan/{symbol}")
