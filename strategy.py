@@ -9,12 +9,25 @@ class Strategy:
         self.deriv = DerivAPI()
 
 
+
     def analyze(self, candles):
 
         if not candles:
-            return "NO DATA"
+            return {
+                "signal": "NO DATA"
+            }
 
         return self.scanner.scan(candles)
+
+
+
+    def get_signal(self, analysis):
+
+        if isinstance(analysis, dict):
+
+            return analysis.get("signal")
+
+        return analysis
 
 
 
@@ -42,6 +55,7 @@ class Strategy:
             )
 
 
+
         elif mode == "H1":
 
             sweep_tf = self.deriv.get_candles(
@@ -57,6 +71,7 @@ class Strategy:
                 count=200,
                 granularity=300
             )
+
 
 
         elif mode == "M5":
@@ -76,6 +91,7 @@ class Strategy:
             )
 
 
+
         else:
 
             return {
@@ -84,50 +100,66 @@ class Strategy:
 
 
 
-        sweep_signal = self.analyze(
-            sweep_tf
-        )
+        sweep_analysis = self.analyze(sweep_tf)
+
+        entry_analysis = self.analyze(entry_tf)
 
 
         if confirmation_tf:
 
-            confirmation_signal = self.analyze(
-                confirmation_tf
-            )
+            confirmation_analysis = self.analyze(confirmation_tf)
 
         else:
 
-            confirmation_signal = None
+            confirmation_analysis = None
 
 
 
-        entry_signal = self.analyze(
-            entry_tf
+        sweep_signal = self.get_signal(
+            sweep_analysis
+        )
+
+        entry_signal = self.get_signal(
+            entry_analysis
         )
 
 
+        confirmation_signal = self.get_signal(
+            confirmation_analysis
+        )
 
-        signals = [
-            sweep_signal,
-            confirmation_signal,
-            entry_signal
-        ]
-
-
-        buy_count = signals.count("BUY")
-
-        sell_count = signals.count("SELL")
 
 
         final_signal = "NO TRADE"
 
 
-        if buy_count >= 2:
+
+        # Higher timeframe direction + entry confirmation
+
+        if (
+            sweep_signal == "BUY"
+            and entry_signal == "BUY"
+        ):
             final_signal = "BUY"
 
 
-        elif sell_count >= 2:
+
+        elif (
+            sweep_signal == "SELL"
+            and entry_signal == "SELL"
+        ):
             final_signal = "SELL"
+
+
+
+        # D1/H4 requires confirmation also
+
+        if mode == "D1_H4":
+
+            if not (
+                sweep_signal == confirmation_signal == entry_signal
+            ):
+                final_signal = "NO TRADE"
 
 
 
@@ -139,10 +171,10 @@ class Strategy:
 
             "final_signal": final_signal,
 
-            "sweep_analysis": sweep_signal,
+            "sweep_analysis": sweep_analysis,
 
-            "confirmation_analysis": confirmation_signal,
+            "confirmation_analysis": confirmation_analysis,
 
-            "entry_analysis": entry_signal
+            "entry_analysis": entry_analysis
 
         }
