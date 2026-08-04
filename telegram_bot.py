@@ -1,39 +1,41 @@
 import os
 import requests
 
-
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+CHAT_ID = "-1004474177840"
 
 
-def send_signal(signal):
-
-    if signal.get("final_signal") == "NO TRADE":
-        return
+def send_telegram(result):
 
     message = f"""
-🚨 SUPASTAN AI LIQUIDITY SCANNER
+🚨 SUPASTAN AI SIGNAL
 
-📊 Symbol: {signal['symbol']}
-📈 Strategy: {signal['mode']}
+Symbol: {result['symbol']}
+Mode: {result['mode']}
 
-✅ Signal: {signal['final_signal']}
+Signal: {result['final_signal']}
+
+Confidence:
+{result['entry_analysis']['confidence']}
 
 Entry:
-{signal.get('trade_plan', {}).get('entry', 'N/A')}
+{result['trade_plan']['entry']}
 
 Stop Loss:
-{signal.get('trade_plan', {}).get('stop_loss', 'N/A')}
+{result['trade_plan']['stop_loss']}
 
 Take Profit:
-{signal.get('trade_plan', {}).get('take_profit', 'N/A')}
+{result['trade_plan']['take_profit']}
 
 Risk Reward:
-{signal.get('trade_plan', {}).get('risk_reward', '1:3+')}
+{result['trade_plan']['risk_reward']}
 """
 
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
     requests.post(
-        f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+        url,
         data={
             "chat_id": CHAT_ID,
             "text": message
