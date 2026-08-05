@@ -1,7 +1,7 @@
 from utils.trend import TrendFilter
 from smc.liquidity import LiquiditySweep
 from smc.market_structure import MarketStructure
-from smc.order_block import OrderBlock
+from smc.order_blocks import OrderBlock
 from smc.retest import Retest
 from utils.confidence import Confidence
 
