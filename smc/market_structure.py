@@ -5,80 +5,59 @@ class MarketStructure:
 
     def detect(self, candles):
 
-        if len(candles) < 20:
+        if len(candles) < 30:
             return None
 
-        recent = candles[-20:-1]
         current = candles[-1]
+        history = candles[-21:-1]
 
-        previous_high = max(
-            c["high"] for c in recent
-        )
+        swing_high = max(history, key=lambda x: x["high"])
+        swing_low = min(history, key=lambda x: x["low"])
 
-        previous_low = min(
-            c["low"] for c in recent
-        )
+        previous_high = swing_high["high"]
+        previous_low = swing_low["low"]
 
-        # Market Context
-        first_close = recent[0]["close"]
-        last_close = recent[-1]["close"]
+        first_close = history[0]["close"]
+        last_close = history[-1]["close"]
 
         bullish_context = last_close > first_close
         bearish_context = last_close < first_close
 
+        signal = None
         bos = None
         choch = None
-        signal = None
 
-        # ==========================
-        # BULLISH STRUCTURE
-        # ==========================
-
+        # Bullish Break
         if current["close"] > previous_high:
 
             signal = "BUY"
 
             if bullish_context:
                 bos = "BULLISH_BOS"
-
-            if bearish_context:
+            else:
                 choch = "BULLISH_CHOCH"
 
-        # ==========================
-        # BEARISH STRUCTURE
-        # ==========================
-
+        # Bearish Break
         elif current["close"] < previous_low:
 
             signal = "SELL"
 
             if bearish_context:
                 bos = "BEARISH_BOS"
-
-            if bullish_context:
+            else:
                 choch = "BEARISH_CHOCH"
 
         if signal is None:
             return None
 
         return {
-
             "signal": signal,
-
             "bos": bos,
-
             "choch": choch,
-
             "previous_high": previous_high,
-
             "previous_low": previous_low,
-
             "confirmation": "BODY_CLOSE",
-
             "market_context": (
-                "BULLISH"
-                if bullish_context
-                else "BEARISH"
+                "BULLISH" if bullish_context else "BEARISH"
             )
-
         }
