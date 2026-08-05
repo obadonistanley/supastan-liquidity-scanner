@@ -8,10 +8,13 @@ from signals.generator import SignalGenerator
 from strategy import Strategy
 from strategy_engine import StrategyEngine
 
+
 app = FastAPI(title="Supastan AI Liquidity Scanner")
+
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 scanner = Scanner()
 deriv = DerivAPI()
@@ -29,8 +32,7 @@ def get_deriv_candles(symbol):
 
     candles = deriv.get_candles(
         symbol=symbol,
-        count=250,
-        granularity=900
+        count=250
     )
 
     return candles
@@ -59,7 +61,7 @@ def scan_market(symbol: str):
     raw_signal = scanner.scan(candles)
 
     if isinstance(raw_signal, dict):
-        direction = raw_signal["signal"]
+        direction = raw_signal.get("signal", "NO TRADE")
     else:
         direction = raw_signal
 
