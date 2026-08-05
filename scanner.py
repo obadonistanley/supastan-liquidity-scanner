@@ -1,7 +1,7 @@
 from utils.trend import TrendFilter
 from smc.liquidity import LiquiditySweep
 from smc.market_structure import MarketStructure
-from smc.order_blocks import OrderBlock
+from smc.order_block import OrderBlock
 
 
 class Scanner:
@@ -10,144 +10,70 @@ class Scanner:
 
         self.trend = TrendFilter()
         self.liquidity = LiquiditySweep()
-        self.market = MarketStructure()
-        self.order_block = OrderBlock()
-
-
+        self.structure = MarketStructure()
+        self.rectangle = OrderBlock()
 
     def scan(self, candles):
 
-        results = []
-
-
         trend = self.trend.detect(candles)
 
-        liquidity_signal = self.liquidity.detect(candles)
+        liquidity = self.liquidity.detect(candles)
 
-        structure_signal = self.market.detect(candles)
+        structure = self.structure.detect(candles)
 
-        order_block_signal = self.order_block.detect(candles)
+        rectangle = self.rectangle.detect(
+            candles,
+            structure
+        )
 
+        missing = []
 
+        if trend == "SIDEWAYS":
+            missing.append("Trend")
 
-        if liquidity_signal:
-            results.append(liquidity_signal)
+        if liquidity is None:
+            missing.append("Liquidity Sweep")
 
+        if structure is None:
+            missing.append("BOS / CHOCH")
 
-        if structure_signal:
-            results.append(structure_signal)
+        if rectangle is None:
+            missing.append("Entry Rectangle")
 
+        if len(missing) == 0:
 
-        if order_block_signal:
-            results.append(order_block_signal)
+            return {
 
+                "signal": rectangle["signal"],
 
+                "trend": trend,
 
-        buy = results.count("BUY")
+                "liquidity": liquidity,
 
-        sell = results.count("SELL")
+                "structure": structure,
 
+                "rectangle": rectangle,
 
+                "confidence": "100%",
 
-        score = 0
+                "reason": "All confirmations completed."
 
-
-
-        if trend == "BULLISH":
-            score += 1
-
-
-        elif trend == "BEARISH":
-            score -= 1
-
-
-
-        score += buy
-
-        score -= sell
-
-
-
-        # Calculate confidence
-
-        confidence = abs(score) * 20
-
-
-        if confidence > 100:
-            confidence = 100
-
-
-
-        # Final signal
-
-        if score >= 3:
-
-            signal = "BUY"
-
-            reason = (
-                "Bullish alignment: "
-                "trend + SMC confirmations"
-            )
-
-
-        elif score <= -3:
-
-            signal = "SELL"
-
-            reason = (
-                "Bearish alignment: "
-                "trend + SMC confirmations"
-            )
-
-
-        else:
-
-            signal = "NO TRADE"
-
-            missing = []
-
-
-            if not liquidity_signal:
-                missing.append("Liquidity Sweep")
-
-
-            if not structure_signal:
-                missing.append("Market Structure")
-
-
-            if not order_block_signal:
-                missing.append("Order Block")
-
-
-            if missing:
-
-                reason = (
-                    "Waiting for: "
-                    + ", ".join(missing)
-                )
-
-            else:
-
-                reason = "Confirmation not aligned"
-
-
+            }
 
         return {
 
-            "signal": signal,
-
-            "confidence": f"{confidence}%",
-
-            "reason": reason,
+            "signal": "NO TRADE",
 
             "trend": trend,
 
-            "liquidity": liquidity_signal,
+            "liquidity": liquidity,
 
-            "structure": structure_signal,
+            "structure": structure,
 
-            "order_block": order_block_signal,
+            "rectangle": rectangle,
 
-            "score": score
+            "confidence": f"{100-(25*len(missing))}%",
+
+            "reason": "Waiting for: " + ", ".join(missing)
 
         }
