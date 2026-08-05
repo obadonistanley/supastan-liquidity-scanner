@@ -29,15 +29,10 @@ class D1H4Strategy:
             granularity=300
         )
 
-        m1 = self.deriv.get_candles(
-            symbol,
-            count=250,
-            granularity=60
-        )
-
-        if not d1 or not h4 or not m5 or not m1:
+        if not d1 or not h4 or not m5:
 
             return {
+                "strategy": "D1/H4",
                 "final_signal": "NO DATA"
             }
 
@@ -47,24 +42,28 @@ class D1H4Strategy:
 
         m5_analysis = self.scanner.scan(m5)
 
-        m1_analysis = self.scanner.scan(m1)
-
         final_signal = "NO TRADE"
 
-        if (
+        # D1 or H4 must produce the HTF sweep
+        htf_buy = (
             d1_analysis["signal"] == "BUY"
-            and h4_analysis["signal"] == "BUY"
-            and m5_analysis["signal"] == "BUY"
-            and m1_analysis["signal"] == "BUY"
-        ):
+            or
+            h4_analysis["signal"] == "BUY"
+        )
+
+        htf_sell = (
+            d1_analysis["signal"] == "SELL"
+            or
+            h4_analysis["signal"] == "SELL"
+        )
+
+        # M5 must complete the setup
+        if htf_buy and m5_analysis["signal"] == "BUY":
+
             final_signal = "BUY"
 
-        elif (
-            d1_analysis["signal"] == "SELL"
-            and h4_analysis["signal"] == "SELL"
-            and m5_analysis["signal"] == "SELL"
-            and m1_analysis["signal"] == "SELL"
-        ):
+        elif htf_sell and m5_analysis["signal"] == "SELL":
+
             final_signal = "SELL"
 
         return {
@@ -73,12 +72,18 @@ class D1H4Strategy:
 
             "final_signal": final_signal,
 
-            "trend": d1_analysis,
+            "higher_timeframe": {
 
-            "liquidity": h4_analysis,
+                "D1": d1_analysis,
 
-            "entry": m5_analysis,
+                "H4": h4_analysis
 
-            "confirmation": m1_analysis
+            },
+
+            "execution": m5_analysis,
+
+            "reason":
+
+            "D1/H4 Sweep → M5 BOS → CHOCH → Rectangle Retest"
 
         }
