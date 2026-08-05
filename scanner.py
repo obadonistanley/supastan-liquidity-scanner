@@ -19,32 +19,58 @@ class Scanner:
 
         liquidity = self.liquidity.detect(candles)
 
+        if liquidity is None:
+
+            return {
+
+                "signal": "NO TRADE",
+
+                "trend": trend,
+
+                "liquidity": None,
+
+                "structure": None,
+
+                "rectangle": None,
+
+                "confidence": "25%",
+
+                "reason": "Waiting for Liquidity Sweep"
+
+            }
+
         structure = self.structure.detect(candles)
+
+        if structure is None:
+
+            return {
+
+                "signal": "NO TRADE",
+
+                "trend": trend,
+
+                "liquidity": liquidity,
+
+                "structure": None,
+
+                "rectangle": None,
+
+                "confidence": "50%",
+
+                "reason": "Liquidity Sweep found. Waiting for BOS / CHOCH"
+
+            }
 
         rectangle = self.rectangle.detect(
             candles,
             structure
         )
 
-        missing = []
-
-        if trend == "SIDEWAYS":
-            missing.append("Trend")
-
-        if liquidity is None:
-            missing.append("Liquidity Sweep")
-
-        if structure is None:
-            missing.append("BOS / CHOCH")
-
         if rectangle is None:
-            missing.append("Entry Rectangle")
-
-        if len(missing) == 0:
 
             return {
 
-                "signal": rectangle["signal"],
+                "signal": "NO TRADE",
 
                 "trend": trend,
 
@@ -52,17 +78,17 @@ class Scanner:
 
                 "structure": structure,
 
-                "rectangle": rectangle,
+                "rectangle": None,
 
-                "confidence": "100%",
+                "confidence": "75%",
 
-                "reason": "All confirmations completed."
+                "reason": "Waiting for fresh Order Block retest"
 
             }
 
         return {
 
-            "signal": "NO TRADE",
+            "signal": rectangle["signal"],
 
             "trend": trend,
 
@@ -72,8 +98,8 @@ class Scanner:
 
             "rectangle": rectangle,
 
-            "confidence": f"{100 - (25 * len(missing))}%",
+            "confidence": "100%",
 
-            "reason": "Waiting for: " + ", ".join(missing)
+            "reason": "Liquidity Sweep → BOS → CHOCH → Fresh Order Block → Retest confirmed"
 
         }
