@@ -5,38 +5,28 @@ class OrderBlock:
 
     def detect(self, candles, structure):
 
-        if structure is None or len(candles) < 20:
+        if not structure:
             return None
 
-        signal = structure["signal"]
+        bos_index = structure.get("index")
 
-        # BOS/CHOCH candle
-        structure_index = len(candles) - 1
+        if bos_index is None or bos_index < 2:
+            return None
 
-        # Search only the last 10 candles before BOS
-        start = max(0, structure_index - 10)
+        # Search backwards from BOS candle for the last opposite candle
+        for i in range(bos_index - 1, max(bos_index - 10, 0), -1):
 
-        if signal == "BUY":
+            candle = candles[i]
 
-            for i in range(structure_index - 1, start - 1, -1):
+            # BUY Order Block = last bearish candle before bullish BOS
+            if structure["signal"] == "BUY":
 
-                candle = candles[i]
-
-                # Last bearish candle
                 if candle["close"] < candle["open"]:
-
-                    fresh = True
-
-                    for future in candles[i + 1:]:
-
-                        if future["close"] < candle["low"]:
-                            fresh = False
-                            break
 
                     return {
                         "signal": "BUY",
                         "type": "BUY_ORDER_BLOCK",
-                        "status": "FRESH" if fresh else "USED",
+                        "status": "FRESH",
                         "zone": "ENTIRE_CANDLE",
                         "high": candle["high"],
                         "low": candle["low"],
@@ -45,27 +35,15 @@ class OrderBlock:
                         "index": i
                     }
 
-        elif signal == "SELL":
+            # SELL Order Block = last bullish candle before bearish BOS
+            else:
 
-            for i in range(structure_index - 1, start - 1, -1):
-
-                candle = candles[i]
-
-                # Last bullish candle
                 if candle["close"] > candle["open"]:
-
-                    fresh = True
-
-                    for future in candles[i + 1:]:
-
-                        if future["close"] > candle["high"]:
-                            fresh = False
-                            break
 
                     return {
                         "signal": "SELL",
                         "type": "SELL_ORDER_BLOCK",
-                        "status": "FRESH" if fresh else "USED",
+                        "status": "FRESH",
                         "zone": "ENTIRE_CANDLE",
                         "high": candle["high"],
                         "low": candle["low"],
