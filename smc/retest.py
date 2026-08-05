@@ -9,11 +9,13 @@ class Retest:
             return None
 
         signal = rectangle["signal"]
+
         high = rectangle["high"]
         low = rectangle["low"]
+
         index = rectangle["index"]
 
-        # Check ONLY candles after the Order Block formed
+        # Only candles AFTER the Order Block
         future = candles[index + 1:]
 
         if len(future) == 0:
@@ -27,12 +29,12 @@ class Retest:
 
             if signal == "BUY":
 
-                # Price enters OB with wick/body
-                if candle["low"] <= high:
+                # Order Block invalidated
+                if candle["close"] < low:
+                    return None
 
-                    # Order Block must not be broken
-                    if candle["close"] < low:
-                        return None
+                # First touch of the zone
+                if candle["low"] <= high:
 
                     return {
 
@@ -40,7 +42,9 @@ class Retest:
 
                         "status": "FIRST_RETEST",
 
-                        "entry": high
+                        "entry": high,
+
+                        "retest_candle": candle
 
                     }
 
@@ -48,12 +52,14 @@ class Retest:
             # SELL RETEST
             # ==========================
 
-            if signal == "SELL":
+            elif signal == "SELL":
 
+                # Order Block invalidated
+                if candle["close"] > high:
+                    return None
+
+                # First touch of the zone
                 if candle["high"] >= low:
-
-                    if candle["close"] > high:
-                        return None
 
                     return {
 
@@ -61,7 +67,9 @@ class Retest:
 
                         "status": "FIRST_RETEST",
 
-                        "entry": low
+                        "entry": low,
+
+                        "retest_candle": candle
 
                     }
 
