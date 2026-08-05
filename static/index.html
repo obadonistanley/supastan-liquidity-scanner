@@ -64,7 +64,7 @@ button:hover{
 
 <h1>Supastan AI Liquidity Scanner</h1>
 
-<p>Scan all major Deriv Volatility Indices.</p>
+<p>AI scans all three of your SMC strategies.</p>
 
 <button onclick="scan()">
 Scan All Markets
@@ -80,7 +80,7 @@ Click the button above to begin scanning.
 
 async function scan(){
 
-document.getElementById("result").innerHTML="🔄 Scanning all markets...";
+document.getElementById("result").innerHTML="🔄 AI is scanning all markets...";
 
 const symbols=[
 "R_10",
@@ -96,17 +96,17 @@ for(const symbol of symbols){
 
 try{
 
-let response=await fetch("/scan/"+symbol);
+let response=await fetch("/ai/"+symbol);
 
 let data=await response.json();
 
 let icon="🟡";
 
-if(data.analysis.signal==="BUY"){
+if(data.overall_signal==="BUY"){
 icon="🟢";
 }
 
-if(data.analysis.signal==="SELL"){
+if(data.overall_signal==="SELL"){
 icon="🔴";
 }
 
@@ -115,17 +115,19 @@ output+=`
 
 ${icon} ${symbol}
 
-📈 Trend:
-${data.analysis.trend}
+🎯 OVERALL SIGNAL
+${data.overall_signal}
 
-🚦 Signal:
-${data.analysis.signal}
+----------------------------
 
-🎯 Confidence:
-${data.analysis.confidence}
+📊 D1 / H4 Strategy
+${data.strategies.D1_H4.final_signal}
 
-📝 Reason:
-${data.analysis.reason}
+📊 H1 Strategy
+${data.strategies.H1.final_signal}
+
+📊 M5 Strategy
+${data.strategies.M5.final_signal}
 
 `;
 
