@@ -23,108 +23,12 @@ class Scanner:
 
         liquidity = self.liquidity.detect(candles)
 
-        if liquidity is None:
-
-            return {
-
-                "signal": "NO TRADE",
-
-                "trend": trend,
-
-                "liquidity": None,
-
-                "structure": None,
-
-                "rectangle": None,
-
-                "retest": None,
-
-                "sequence": None,
-
-                "confidence": "25%",
-
-                "reason": "Waiting for Liquidity Sweep"
-
-            }
-
         structure = self.structure.detect(candles)
-
-        if structure is None:
-
-            return {
-
-                "signal": "NO TRADE",
-
-                "trend": trend,
-
-                "liquidity": liquidity,
-
-                "structure": None,
-
-                "rectangle": None,
-
-                "retest": None,
-
-                "sequence": None,
-
-                "confidence": "50%",
-
-                "reason": "Liquidity Sweep found. Waiting for BOS / CHOCH"
-
-            }
 
         rectangle = self.rectangle.detect(
             candles,
             structure
         )
-
-        if rectangle is None:
-
-            return {
-
-                "signal": "NO TRADE",
-
-                "trend": trend,
-
-                "liquidity": liquidity,
-
-                "structure": structure,
-
-                "rectangle": None,
-
-                "retest": None,
-
-                "sequence": None,
-
-                "confidence": "75%",
-
-                "reason": "Waiting for Fresh Order Block"
-
-            }
-
-        if rectangle["status"] != "FRESH":
-
-            return {
-
-                "signal": "NO TRADE",
-
-                "trend": trend,
-
-                "liquidity": liquidity,
-
-                "structure": structure,
-
-                "rectangle": rectangle,
-
-                "retest": None,
-
-                "sequence": None,
-
-                "confidence": "80%",
-
-                "reason": "Order Block already mitigated"
-
-            }
 
         retest = self.retest.detect(
             candles,
@@ -132,22 +36,17 @@ class Scanner:
         )
 
         sequence = self.sequence.validate(
-
             liquidity,
-
             structure,
-
             rectangle,
-
             retest
-
         )
 
-        if not sequence["valid"]:
+        if sequence["valid"]:
 
             return {
 
-                "signal": "NO TRADE",
+                "signal": sequence["signal"],
 
                 "trend": trend,
 
@@ -159,17 +58,29 @@ class Scanner:
 
                 "retest": retest,
 
-                "sequence": sequence,
-
-                "confidence": "90%",
+                "confidence": "100%",
 
                 "reason": sequence["reason"]
 
             }
 
+        confidence = "25%"
+
+        if liquidity:
+            confidence = "40%"
+
+        if liquidity and structure:
+            confidence = "60%"
+
+        if liquidity and structure and rectangle:
+            confidence = "80%"
+
+        if liquidity and structure and rectangle and retest:
+            confidence = "90%"
+
         return {
 
-            "signal": rectangle["signal"],
+            "signal": "NO TRADE",
 
             "trend": trend,
 
@@ -181,10 +92,8 @@ class Scanner:
 
             "retest": retest,
 
-            "sequence": sequence,
+            "confidence": confidence,
 
-            "confidence": "100%",
-
-            "reason": "Liquidity Sweep → BOS / CHOCH → Fresh Order Block → First Retest → ENTRY"
+            "reason": sequence["reason"]
 
         }
