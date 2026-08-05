@@ -24,48 +24,60 @@ class MarketStructure:
         )
 
 
+        # find recent swing points
+
+        last_high = max(
+            c["high"] for c in candles[-10:]
+        )
+
+        last_low = min(
+            c["low"] for c in candles[-10:]
+        )
+
+
         # ==========================
-        # BULLISH BOS
+        # BULLISH BOS / CHOCH
         # ==========================
 
-        if current["close"] > previous_high:
+        if current["close"] > last_high:
 
             return {
 
-                "signal": "BUY",
+                "signal":"BUY",
 
-                "bos": "BULLISH_BOS",
+                "bos":"BULLISH_BOS",
 
-                "choch": "BULLISH_CHOCH",
+                "choch":"BULLISH_CHOCH",
 
-                "previous_high": previous_high,
+                "previous_high":previous_high,
 
-                "previous_low": previous_low,
+                "previous_low":previous_low,
 
-                "confirmation": "BODY_CLOSE"
+                "confirmation":"BODY_CLOSE"
 
             }
 
 
+
         # ==========================
-        # BEARISH BOS
+        # BEARISH BOS / CHOCH
         # ==========================
 
-        if current["close"] < previous_low:
+        if current["close"] < last_low:
 
             return {
 
-                "signal": "SELL",
+                "signal":"SELL",
 
-                "bos": "BEARISH_BOS",
+                "bos":"BEARISH_BOS",
 
-                "choch": "BEARISH_CHOCH",
+                "choch":"BEARISH_CHOCH",
 
-                "previous_high": previous_high,
+                "previous_high":previous_high,
 
-                "previous_low": previous_low,
+                "previous_low":previous_low,
 
-                "confirmation": "BODY_CLOSE"
+                "confirmation":"BODY_CLOSE"
 
             }
 
