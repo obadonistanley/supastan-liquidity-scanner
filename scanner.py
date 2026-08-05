@@ -1,7 +1,7 @@
 from utils.trend import TrendFilter
 from smc.liquidity import LiquiditySweep
 from smc.market_structure import MarketStructure
-from smc.order_block import OrderBlock
+from smc.order_blocks import OrderBlock
 
 
 class Scanner:
@@ -72,7 +72,7 @@ class Scanner:
 
             "rectangle": rectangle,
 
-            "confidence": f"{100-(25*len(missing))}%",
+            "confidence": f"{100 - (25 * len(missing))}%",
 
             "reason": "Waiting for: " + ", ".join(missing)
 
