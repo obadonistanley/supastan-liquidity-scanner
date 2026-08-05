@@ -6,6 +6,7 @@ from scanner import Scanner
 from data.deriv import DerivAPI
 from signals.generator import SignalGenerator
 from strategy import Strategy
+from strategy_engine import StrategyEngine
 
 app = FastAPI(title="Supastan AI Liquidity Scanner")
 
@@ -16,6 +17,7 @@ scanner = Scanner()
 deriv = DerivAPI()
 signal_generator = SignalGenerator()
 strategy = Strategy()
+strategy_engine = StrategyEngine()
 
 
 @app.get("/")
@@ -82,6 +84,16 @@ def run_strategy(symbol: str, mode: str):
     result = strategy.run(
         symbol.upper(),
         mode.upper()
+    )
+
+    return result
+
+
+@app.get("/ai/{symbol}")
+def ai_scan(symbol: str):
+
+    result = strategy_engine.best_signal(
+        symbol.upper()
     )
 
     return result
