@@ -26,6 +26,7 @@ class M5Strategy:
         if not m5 or not m1:
 
             return {
+                "strategy": "M5",
                 "final_signal": "NO DATA"
             }
 
@@ -37,14 +38,18 @@ class M5Strategy:
 
         if (
             m5_analysis["signal"] == "BUY"
-            and m1_analysis["signal"] == "BUY"
+            and
+            m1_analysis["signal"] == "BUY"
         ):
+
             final_signal = "BUY"
 
         elif (
             m5_analysis["signal"] == "SELL"
-            and m1_analysis["signal"] == "SELL"
+            and
+            m1_analysis["signal"] == "SELL"
         ):
+
             final_signal = "SELL"
 
         return {
@@ -53,8 +58,11 @@ class M5Strategy:
 
             "final_signal": final_signal,
 
-            "trend": m5_analysis,
+            "higher_timeframe": m5_analysis,
 
-            "confirmation": m1_analysis
+            "execution": m1_analysis,
+
+            "reason":
+            "M5 Sweep → M1 BOS → CHOCH → Rectangle Retest"
 
         }
