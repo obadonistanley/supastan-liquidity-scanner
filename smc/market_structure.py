@@ -3,7 +3,6 @@ class MarketStructure:
     def __init__(self):
         pass
 
-
     def detect(self, candles):
 
         if len(candles) < 20:
@@ -20,65 +19,34 @@ class MarketStructure:
             c["low"] for c in recent
         )
 
-        # Trend Context
-        last_close = recent[-1]["close"]
+        # Market Context
         first_close = recent[0]["close"]
+        last_close = recent[-1]["close"]
 
         bullish_context = last_close > first_close
         bearish_context = last_close < first_close
 
         # ==========================
-        # Bullish BOS
+        # BULLISH BOS
+        # Body must CLOSE above structure
         # ==========================
+
         if (
-            current["high"] > previous_high
+            bullish_context
             and current["close"] > previous_high
-            and bullish_context
         ):
             return {
                 "type": "BULLISH_BOS",
                 "signal": "BUY",
-                "level": previous_high
+                "level": previous_high,
+                "confirmation": "BODY_CLOSE"
             }
 
         # ==========================
-        # Bearish BOS
+        # BEARISH BOS
+        # Body must CLOSE below structure
         # ==========================
-        if (
-            current["low"] < previous_low
-            and current["close"] < previous_low
-            and bearish_context
-        ):
-            return {
-                "type": "BEARISH_BOS",
-                "signal": "SELL",
-                "level": previous_low
-            }
 
-        # ==========================
-        # Bullish CHOCH
-        # ==========================
         if (
             bearish_context
-            and current["close"] > previous_high
-        ):
-            return {
-                "type": "BULLISH_CHOCH",
-                "signal": "BUY",
-                "level": previous_high
-            }
-
-        # ==========================
-        # Bearish CHOCH
-        # ==========================
-        if (
-            bullish_context
             and current["close"] < previous_low
-        ):
-            return {
-                "type": "BEARISH_CHOCH",
-                "signal": "SELL",
-                "level": previous_low
-            }
-
-        return None
