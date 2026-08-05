@@ -1,9 +1,9 @@
 from utils.trend import TrendFilter
 from smc.liquidity import LiquiditySweep
 from smc.market_structure import MarketStructure
-from smc.order_blocks import OrderBlock
+from smc.order_block import OrderBlock
 from smc.retest import Retest
-from smc.sequence import SequenceValidator
+from utils.confidence import Confidence
 
 
 class Scanner:
@@ -15,13 +15,16 @@ class Scanner:
         self.structure = MarketStructure()
         self.rectangle = OrderBlock()
         self.retest = Retest()
-        self.sequence = SequenceValidator()
+        self.confidence = Confidence()
 
-    def scan(self, candles):
+    def scan(self, candles, timeframe="M5"):
 
         trend = self.trend.detect(candles)
 
-        liquidity = self.liquidity.detect(candles)
+        liquidity = self.liquidity.detect(
+            candles,
+            timeframe
+        )
 
         structure = self.structure.detect(candles)
 
@@ -35,52 +38,34 @@ class Scanner:
             rectangle
         )
 
-        sequence = self.sequence.validate(
+        confidence = self.confidence.calculate(
+            trend,
             liquidity,
             structure,
             rectangle,
             retest
         )
 
-        if sequence["valid"]:
+        signal = "NO TRADE"
 
-            return {
+        if (
+            liquidity
+            and structure
+            and rectangle
+            and retest
+        ):
 
-                "signal": sequence["signal"],
-
-                "trend": trend,
-
-                "liquidity": liquidity,
-
-                "structure": structure,
-
-                "rectangle": rectangle,
-
-                "retest": retest,
-
-                "confidence": "100%",
-
-                "reason": sequence["reason"]
-
-            }
-
-        confidence = "25%"
-
-        if liquidity:
-            confidence = "40%"
-
-        if liquidity and structure:
-            confidence = "60%"
-
-        if liquidity and structure and rectangle:
-            confidence = "80%"
-
-        if liquidity and structure and rectangle and retest:
-            confidence = "90%"
+            if (
+                liquidity["signal"]
+                == structure["signal"]
+                == rectangle["signal"]
+                == retest["signal"]
+            ):
+                signal = liquidity["signal"]
 
         return {
 
-            "signal": "NO TRADE",
+            "signal": signal,
 
             "trend": trend,
 
@@ -92,8 +77,18 @@ class Scanner:
 
             "retest": retest,
 
-            "confidence": confidence,
+            "confidence": confidence["confidence"],
 
-            "reason": sequence["reason"]
+            "score": confidence["score"],
+
+            "quality": confidence["quality"],
+
+            "confirmed": confidence["confirmed"],
+
+            "reason": (
+                "Complete SMC confirmation"
+                if signal != "NO TRADE"
+                else "Waiting for full confirmation"
+            )
 
         }
