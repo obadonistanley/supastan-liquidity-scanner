@@ -1,5 +1,6 @@
 from scanner import Scanner
 from data.deriv import DerivAPI
+from smc.liquidity import LiquiditySweep
 
 
 class D1H4Strategy:
@@ -8,6 +9,7 @@ class D1H4Strategy:
 
         self.scanner = Scanner()
         self.deriv = DerivAPI()
+        self.liquidity = LiquiditySweep()
 
     def run(self, symbol):
 
@@ -32,37 +34,53 @@ class D1H4Strategy:
         if not d1 or not h4 or not m5:
 
             return {
+
                 "strategy": "D1/H4",
+
                 "final_signal": "NO DATA"
+
             }
 
-        d1_analysis = self.scanner.scan(d1)
+        # ==========================
+        # HIGHER TIMEFRAME
+        # LIQUIDITY SWEEP ONLY
+        # ==========================
 
-        h4_analysis = self.scanner.scan(h4)
+        d1_sweep = self.liquidity.detect(d1)
+
+        h4_sweep = self.liquidity.detect(h4)
+
+        # ==========================
+        # ENTRY TIMEFRAME
+        # BOS → CHOCH → ORDER BLOCK
+        # RETEST
+        # ==========================
 
         m5_analysis = self.scanner.scan(m5)
 
         final_signal = "NO TRADE"
 
-        # D1 or H4 must produce the HTF sweep
-        htf_buy = (
-            d1_analysis["signal"] == "BUY"
-            or
-            h4_analysis["signal"] == "BUY"
-        )
+        if (
 
-        htf_sell = (
-            d1_analysis["signal"] == "SELL"
-            or
-            h4_analysis["signal"] == "SELL"
-        )
+            (d1_sweep == "BUY" or h4_sweep == "BUY")
 
-        # M5 must complete the setup
-        if htf_buy and m5_analysis["signal"] == "BUY":
+            and
+
+            m5_analysis["signal"] == "BUY"
+
+        ):
 
             final_signal = "BUY"
 
-        elif htf_sell and m5_analysis["signal"] == "SELL":
+        elif (
+
+            (d1_sweep == "SELL" or h4_sweep == "SELL")
+
+            and
+
+            m5_analysis["signal"] == "SELL"
+
+        ):
 
             final_signal = "SELL"
 
@@ -74,16 +92,14 @@ class D1H4Strategy:
 
             "higher_timeframe": {
 
-                "D1": d1_analysis,
+                "D1_Liquidity": d1_sweep,
 
-                "H4": h4_analysis
+                "H4_Liquidity": h4_sweep
 
             },
 
             "execution": m5_analysis,
 
-            "reason":
-
-            "D1/H4 Sweep → M5 BOS → CHOCH → Rectangle Retest"
+            "reason": "D1/H4 Liquidity Sweep → M5 BOS → CHOCH → Fresh Order Block → First Retest"
 
         }
