@@ -13,14 +13,14 @@ class OrderBlock:
 
         signal = structure["signal"]
 
-        # ===========================
+        # =====================================
         # BUY ORDER BLOCK
-        # Last Bearish Candle
-        # ===========================
+        # Last Bearish Candle before BOS
+        # =====================================
 
         if signal == "BUY":
 
-            for i in range(len(candles)-2, 0, -1):
+            for i in range(len(candles) - 2, 0, -1):
 
                 candle = candles[i]
 
@@ -29,47 +29,70 @@ class OrderBlock:
                     high = candle["high"]
                     low = candle["low"]
 
-                    # Fresh Order Block Check
                     fresh = True
 
-                    for future in candles[i+1:]:
+                    for future in candles[i + 1:]:
 
-                        if future["low"] <= high and future["high"] >= low:
+                        # Only invalidate if candle BODY closes below the Order Block
+                        if future["close"] < low:
+
                             fresh = False
                             break
 
                     if fresh:
 
                         return {
+
+                            "signal": "BUY",
+
                             "type": "BUY_ORDER_BLOCK",
+
                             "status": "FRESH",
+
+                            "zone": "ENTIRE_CANDLE",
+
                             "high": high,
+
                             "low": low,
+
                             "open": candle["open"],
+
                             "close": candle["close"],
+
                             "index": i
+
                         }
 
-                    else:
+                    return {
 
-                        return {
-                            "type": "BUY_ORDER_BLOCK",
-                            "status": "USED",
-                            "high": high,
-                            "low": low,
-                            "open": candle["open"],
-                            "close": candle["close"],
-                            "index": i
-                        }
+                        "signal": "BUY",
 
-        # ===========================
+                        "type": "BUY_ORDER_BLOCK",
+
+                        "status": "USED",
+
+                        "zone": "ENTIRE_CANDLE",
+
+                        "high": high,
+
+                        "low": low,
+
+                        "open": candle["open"],
+
+                        "close": candle["close"],
+
+                        "index": i
+
+                    }
+
+        # =====================================
         # SELL ORDER BLOCK
-        # Last Bullish Candle
-        # ===========================
+        # Last Bullish Candle before BOS
+        # =====================================
 
         if signal == "SELL":
 
-            for i in range(len(candles)-2, 0, -1):
+            for i in range(len(candles) - 2, 0, -1):
 
                 candle = candles[i]
 
@@ -78,37 +101,60 @@ class OrderBlock:
                     high = candle["high"]
                     low = candle["low"]
 
-                    # Fresh Order Block Check
                     fresh = True
 
-                    for future in candles[i+1:]:
+                    for future in candles[i + 1:]:
 
-                        if future["low"] <= high and future["high"] >= low:
+                        # Only invalidate if candle BODY closes above the Order Block
+                        if future["close"] > high:
+
                             fresh = False
                             break
 
                     if fresh:
 
                         return {
+
+                            "signal": "SELL",
+
                             "type": "SELL_ORDER_BLOCK",
+
                             "status": "FRESH",
+
+                            "zone": "ENTIRE_CANDLE",
+
                             "high": high,
+
                             "low": low,
+
                             "open": candle["open"],
+
                             "close": candle["close"],
+
                             "index": i
+
                         }
 
-                    else:
+                    return {
 
-                        return {
-                            "type": "SELL_ORDER_BLOCK",
-                            "status": "USED",
-                            "high": high,
-                            "low": low,
-                            "open": candle["open"],
-                            "close": candle["close"],
-                            "index": i
-                        }
+                        "signal": "SELL",
+
+                        "type": "SELL_ORDER_BLOCK",
+
+                        "status": "USED",
+
+                        "zone": "ENTIRE_CANDLE",
+
+                        "high": high,
+
+                        "low": low,
+
+                        "open": candle["open"],
+
+                        "close": candle["close"],
+
+                        "index": i
+
+                    }
 
         return None
