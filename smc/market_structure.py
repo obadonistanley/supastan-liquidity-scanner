@@ -8,161 +8,63 @@ class MarketStructure:
         if len(candles) < 40:
             return None
 
-        current = candles[-1]
-
-        previous = candles[-2]
-
-        swing = candles[-21:-1]
-
-        previous_high = max(
-            c["high"] for c in swing
-        )
-
-        previous_low = min(
-            c["low"] for c in swing
-        )
-
-        body = abs(
-            current["close"] - current["open"]
-        )
-
-        candle_range = (
-            current["high"] - current["low"]
-        )
-
-        if candle_range == 0:
-            return None
-
-        body_ratio = body / candle_range
-
-        displacement = body_ratio >= 0.60
-
-        # ==========================
-        # BULLISH BOS
-        # ==========================
-
-        if (
-
-            current["close"] > previous_high
-
-            and
-
-            displacement
-
-        ):
-
-            return {
-
-                "signal": "BUY",
-
-                "bos": "BULLISH_BOS",
-
-                "choch": "BULLISH_CHOCH",
-
-                "previous_high": previous_high,
-
-                "previous_low": previous_low,
-
-                "confirmation": "BODY_CLOSE"
-
-            }
-
-        # ==========================
-        # BEARISH BOS
-        # ==========================
-
-        if (
-
-            current["close"] < previous_low
-
-            and
-
-            displacement
-
-        ):
-
-            return {
-
-                "signal": "SELL",
-
-                "bos": "BEARISH_BOS",
-
-                "choch": "BEARISH_CHOCH",
-
-                "previous_high": previous_high,
-
-                "previous_low": previous_low,
-
-                "confirmation": "BODY_CLOSE"
-
-            }
-
-        # ==========================
-        # BULLISH CHOCH
-        # ==========================
-
-        if (
-
-            previous["close"] < previous["open"]
-
-            and
-
-            current["close"] > previous["high"]
-
-            and
-
-            displacement
-
-        ):
-
-            return {
-
-                "signal": "BUY",
-
-                "bos": "BULLISH_BOS",
-
-                "choch": "BULLISH_CHOCH",
-
-                "previous_high": previous_high,
-
-                "previous_low": previous_low,
-
-                "confirmation": "DISPLACEMENT"
-
-            }
-
-        # ==========================
-        # BEARISH CHOCH
-        # ==========================
-
-        if (
-
-            previous["close"] > previous["open"]
-
-            and
-
-            current["close"] < previous["low"]
-
-            and
-
-            displacement
-
-        ):
-
-            return {
-
-                "signal": "SELL",
-
-                "bos": "BEARISH_BOS",
-
-                "choch": "BEARISH_CHOCH",
-
-                "previous_high": previous_high,
-
-                "previous_low": previous_low,
-
-                "confirmation": "DISPLACEMENT"
-
-            }
+        # Look back over recent candles
+        for i in range(len(candles) - 2, 15, -1):
+
+            current = candles[i]
+
+            previous = candles[i-15:i]
+
+            previous_high = max(c["high"] for c in previous)
+            previous_low = min(c["low"] for c in previous)
+
+            # Bullish BOS
+            if current["close"] > previous_high:
+
+                return {
+                    "signal": "BUY",
+                    "bos": "BULLISH_BOS",
+                    "choch": "BULLISH_CHOCH",
+                    "previous_high": previous_high,
+                    "previous_low": previous_low,
+                    "confirmation": "BODY_CLOSE",
+                    "index": i
+                }
+
+            # Bearish BOS
+            if current["close"] < previous_low:
+
+                return {
+                    "signal": "SELL",
+                    "bos": "BEARISH_BOS",
+                    "choch": "BEARISH_CHOCH",
+                    "previous_high": previous_high,
+                    "previous_low": previous_low,
+                    "confirmation": "BODY_CLOSE",
+                    "index": i
+                }
+
+        # Displacement search
+        for i in range(len(candles)-2, 3, -1):
+
+            if candles[i]["close"] > candles[i-2]["high"]:
+
+                return {
+                    "signal": "BUY",
+                    "bos": "BULLISH_BOS",
+                    "choch": "BULLISH_CHOCH",
+                    "confirmation": "DISPLACEMENT",
+                    "index": i
+                }
+
+            if candles[i]["close"] < candles[i-2]["low"]:
+
+                return {
+                    "signal": "SELL",
+                    "bos": "BEARISH_BOS",
+                    "choch": "BEARISH_CHOCH",
+                    "confirmation": "DISPLACEMENT",
+                    "index": i
+                }
 
         return None
