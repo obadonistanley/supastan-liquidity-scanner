@@ -9,7 +9,7 @@ class Retest:
         if not rectangle:
             return None
 
-        if len(candles) < 10:
+        if len(candles) < 5:
             return None
 
 
@@ -18,19 +18,25 @@ class Retest:
         signal = rectangle["signal"]
 
 
-        # check last 10 candles for OB touch
-        recent = candles[-10:]
+        recent = candles[-5:]
 
 
         for candle in recent:
 
 
-            # SELL retest
+            candle_high = candle["high"]
+            candle_low = candle["low"]
+
+
+            # =====================
+            # SELL ORDER BLOCK RETEST
+            # =====================
+
             if signal == "SELL":
 
                 if (
-                    candle["high"] >= zone_low
-                    and candle["high"] <= zone_high
+                    candle_high >= zone_low
+                    and candle_low <= zone_high
                 ):
 
                     return {
@@ -44,12 +50,15 @@ class Retest:
 
 
 
-            # BUY retest
+            # =====================
+            # BUY ORDER BLOCK RETEST
+            # =====================
+
             if signal == "BUY":
 
                 if (
-                    candle["low"] <= zone_high
-                    and candle["low"] >= zone_low
+                    candle_low <= zone_high
+                    and candle_high >= zone_low
                 ):
 
                     return {
