@@ -17,15 +17,27 @@ class SequenceValidator:
 
     ):
 
+        # ==========================
+        # STEP 1
+        # Liquidity Sweep
+        # ==========================
+
         if liquidity is None:
 
             return {
 
                 "valid": False,
 
+                "signal": "NO TRADE",
+
                 "reason": "Liquidity Sweep missing"
 
             }
+
+        # ==========================
+        # STEP 2
+        # BOS / CHOCH
+        # ==========================
 
         if structure is None:
 
@@ -33,15 +45,24 @@ class SequenceValidator:
 
                 "valid": False,
 
+                "signal": "NO TRADE",
+
                 "reason": "BOS / CHOCH missing"
 
             }
+
+        # ==========================
+        # STEP 3
+        # Fresh Order Block
+        # ==========================
 
         if rectangle is None:
 
             return {
 
                 "valid": False,
+
+                "signal": "NO TRADE",
 
                 "reason": "Fresh Order Block missing"
 
@@ -53,9 +74,16 @@ class SequenceValidator:
 
                 "valid": False,
 
-                "reason": "Order Block already used"
+                "signal": "NO TRADE",
+
+                "reason": "Order Block already mitigated"
 
             }
+
+        # ==========================
+        # STEP 4
+        # First Retest
+        # ==========================
 
         if retest is None:
 
@@ -63,44 +91,65 @@ class SequenceValidator:
 
                 "valid": False,
 
-                "reason": "Waiting for first retest"
+                "signal": "NO TRADE",
+
+                "reason": "Waiting for First Retest"
 
             }
 
-        if liquidity != structure["signal"]:
+        # ==========================
+        # STEP 5
+        # Direction Agreement
+        # ==========================
+
+        direction = structure["signal"]
+
+        if liquidity != direction:
 
             return {
 
                 "valid": False,
 
-                "reason": "Liquidity and Structure disagree"
+                "signal": "NO TRADE",
+
+                "reason": "Liquidity direction mismatch"
 
             }
 
-        if structure["signal"] != rectangle["signal"]:
+        if rectangle["signal"] != direction:
 
             return {
 
                 "valid": False,
 
-                "reason": "Structure and Order Block disagree"
+                "signal": "NO TRADE",
+
+                "reason": "Order Block direction mismatch"
 
             }
 
-        if rectangle["signal"] != retest["signal"]:
+        if retest["signal"] != direction:
 
             return {
 
                 "valid": False,
+
+                "signal": "NO TRADE",
 
                 "reason": "Retest direction mismatch"
 
             }
 
+        # ==========================
+        # COMPLETE SEQUENCE
+        # ==========================
+
         return {
 
             "valid": True,
 
-            "reason": "Complete SMC sequence confirmed"
+            "signal": direction,
+
+            "reason": "Liquidity Sweep → BOS → CHOCH → Fresh Order Block → First Retest"
 
         }
