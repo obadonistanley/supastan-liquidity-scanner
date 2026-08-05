@@ -8,47 +8,61 @@ class Retest:
         if rectangle is None:
             return None
 
-        current = candles[-1]
-
+        signal = rectangle["signal"]
         high = rectangle["high"]
         low = rectangle["low"]
+        index = rectangle["index"]
 
-        signal = rectangle["signal"]
+        # Check ONLY candles after the Order Block formed
+        future = candles[index + 1:]
 
-        # ==========================
-        # BUY RETEST
-        # ==========================
+        if len(future) == 0:
+            return None
 
-        if signal == "BUY":
+        for candle in future:
 
-            if current["low"] <= high and current["close"] >= low:
+            # ==========================
+            # BUY RETEST
+            # ==========================
 
-                return {
+            if signal == "BUY":
 
-                    "status": "RETEST_CONFIRMED",
+                # Price enters OB with wick/body
+                if candle["low"] <= high:
 
-                    "signal": "BUY",
+                    # Order Block must not be broken
+                    if candle["close"] < low:
+                        return None
 
-                    "zone": "ORDER_BLOCK"
+                    return {
 
-                }
+                        "signal": "BUY",
 
-        # ==========================
-        # SELL RETEST
-        # ==========================
+                        "status": "FIRST_RETEST",
 
-        if signal == "SELL":
+                        "entry": high
 
-            if current["high"] >= low and current["close"] <= high:
+                    }
 
-                return {
+            # ==========================
+            # SELL RETEST
+            # ==========================
 
-                    "status": "RETEST_CONFIRMED",
+            if signal == "SELL":
 
-                    "signal": "SELL",
+                if candle["high"] >= low:
 
-                    "zone": "ORDER_BLOCK"
+                    if candle["close"] > high:
+                        return None
 
-                }
+                    return {
+
+                        "signal": "SELL",
+
+                        "status": "FIRST_RETEST",
+
+                        "entry": low
+
+                    }
 
         return None
