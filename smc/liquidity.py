@@ -10,10 +10,8 @@ class LiquiditySweep:
 
         timeframe = timeframe.upper()
 
-        # Scan only the last 10 candles
-        start = max(20, len(candles) - 10)
-
-        for i in range(start, len(candles)):
+        # Scan from newest candle backwards
+        for i in range(len(candles) - 1, 19, -1):
 
             current = candles[i]
             previous = candles[i-20:i]
@@ -21,9 +19,7 @@ class LiquiditySweep:
             previous_high = max(c["high"] for c in previous)
             previous_low = min(c["low"] for c in previous)
 
-            candle_body = abs(
-                current["close"] - current["open"]
-            )
+            body = abs(current["close"] - current["open"])
 
             upper_wick = (
                 current["high"] -
@@ -35,17 +31,18 @@ class LiquiditySweep:
                 current["low"]
             )
 
-            # ==========================
-            # M1 / M5 (WICK ONLY)
-            # ==========================
+            # -------------------------
+            # M1 / M5
+            # Wick rejection required
+            # -------------------------
 
             if timeframe in ["M1", "M5"]:
 
-                # SELL Sweep
+                # SELL liquidity
                 if (
                     current["high"] > previous_high
                     and current["close"] < previous_high
-                    and upper_wick > candle_body
+                    and upper_wick > body
                 ):
 
                     return {
@@ -56,11 +53,11 @@ class LiquiditySweep:
                         "index": i
                     }
 
-                # BUY Sweep
+                # BUY liquidity
                 if (
                     current["low"] < previous_low
                     and current["close"] > previous_low
-                    and lower_wick > candle_body
+                    and lower_wick > body
                 ):
 
                     return {
@@ -71,29 +68,36 @@ class LiquiditySweep:
                         "index": i
                     }
 
-            # ==========================
-            # H1 / H4 / D1 (BODY OR WICK)
-            # ==========================
+            # -------------------------
+            # H1 / H4 / D1
+            # Wick sweep only
+            # -------------------------
 
             else:
 
-                # SELL Sweep
-                if current["high"] > previous_high:
+                # SELL liquidity
+                if (
+                    current["high"] > previous_high
+                    and current["close"] <= current["high"]
+                ):
 
                     return {
                         "signal": "SELL",
-                        "sweep": "BODY_OR_WICK",
+                        "sweep": "WICK",
                         "level": previous_high,
                         "timeframe": timeframe,
                         "index": i
                     }
 
-                # BUY Sweep
-                if current["low"] < previous_low:
+                # BUY liquidity
+                if (
+                    current["low"] < previous_low
+                    and current["close"] >= current["low"]
+                ):
 
                     return {
                         "signal": "BUY",
-                        "sweep": "BODY_OR_WICK",
+                        "sweep": "WICK",
                         "level": previous_low,
                         "timeframe": timeframe,
                         "index": i
