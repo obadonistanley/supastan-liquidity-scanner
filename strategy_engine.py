@@ -13,42 +13,40 @@ class StrategyEngine:
 
     def scan_all(self, symbol):
 
-        results = {}
-
-        results["D1_H4"] = self.d1_h4.run(symbol)
-
-        results["H1"] = self.h1.run(symbol)
-
-        results["M5"] = self.m5.run(symbol)
-
-        return results
+        return {
+            "D1_H4": self.d1_h4.run(symbol),
+            "H1": self.h1.run(symbol),
+            "M5": self.m5.run(symbol)
+        }
 
     def best_signal(self, symbol):
 
         results = self.scan_all(symbol)
 
-        buy = 0
-        sell = 0
+        priority = [
+            results["D1_H4"],
+            results["H1"],
+            results["M5"]
+        ]
 
-        for value in results.values():
+        for setup in priority:
 
-            if value["final_signal"] == "BUY":
-                buy += 1
+            if setup["final_signal"] in ["BUY", "SELL"]:
 
-            elif value["final_signal"] == "SELL":
-                sell += 1
-
-        if buy >= 2:
-            overall = "BUY"
-
-        elif sell >= 2:
-            overall = "SELL"
-
-        else:
-            overall = "NO TRADE"
+                return {
+                    "symbol": symbol,
+                    "overall_signal": setup["final_signal"],
+                    "strategy": setup["strategy"],
+                    "confidence": setup["confidence"],
+                    "entry": setup["entry"],
+                    "stop_loss": setup["stop_loss"],
+                    "take_profit": setup["take_profit"],
+                    "reason": setup["reason"],
+                    "strategies": results
+                }
 
         return {
             "symbol": symbol,
-            "overall_signal": overall,
+            "overall_signal": "NO TRADE",
             "strategies": results
         }
