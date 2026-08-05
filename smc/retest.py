@@ -3,72 +3,52 @@ class Retest:
     def __init__(self):
         pass
 
-
     def detect(self, candles, rectangle):
 
         if not rectangle:
             return None
 
-        if len(candles) < 5:
-            return None
+        ob_index = rectangle.get("index")
 
+        if ob_index is None:
+            return None
 
         zone_high = rectangle["high"]
         zone_low = rectangle["low"]
         signal = rectangle["signal"]
 
+        # Only check candles AFTER the order block
+        for candle in candles[ob_index + 1:]:
 
-        recent = candles[-5:]
+            high = candle["high"]
+            low = candle["low"]
 
-
-        for candle in recent:
-
-
-            candle_high = candle["high"]
-            candle_low = candle["low"]
-
-
-            # =====================
-            # SELL ORDER BLOCK RETEST
-            # =====================
-
+            # ==========================
+            # SELL RETEST
+            # ==========================
             if signal == "SELL":
 
-                if (
-                    candle_high >= zone_low
-                    and candle_low <= zone_high
-                ):
+                if high >= zone_low and low <= zone_high:
 
                     return {
-
                         "signal": "SELL",
                         "status": "FIRST_RETEST",
                         "entry": zone_low,
                         "retest_candle": candle
-
                     }
 
-
-
-            # =====================
-            # BUY ORDER BLOCK RETEST
-            # =====================
-
+            # ==========================
+            # BUY RETEST
+            # ==========================
             if signal == "BUY":
 
-                if (
-                    candle_low <= zone_high
-                    and candle_high >= zone_low
-                ):
+                if low <= zone_high and high >= zone_low:
 
                     return {
-
                         "signal": "BUY",
                         "status": "FIRST_RETEST",
                         "entry": zone_high,
                         "retest_candle": candle
-
                     }
-
 
         return None
