@@ -50,3 +50,44 @@ class MarketStructure:
         if (
             bearish_context
             and current["close"] < previous_low
+        ):
+            return {
+                "type": "BEARISH_BOS",
+                "signal": "SELL",
+                "level": previous_low,
+                "confirmation": "BODY_CLOSE"
+            }
+
+        # ==========================
+        # BULLISH CHOCH
+        # Trend changes from bearish
+        # ==========================
+
+        if (
+            bearish_context
+            and current["close"] > previous_high
+        ):
+            return {
+                "type": "BULLISH_CHOCH",
+                "signal": "BUY",
+                "level": previous_high,
+                "confirmation": "BODY_CLOSE"
+            }
+
+        # ==========================
+        # BEARISH CHOCH
+        # Trend changes from bullish
+        # ==========================
+
+        if (
+            bullish_context
+            and current["close"] < previous_low
+        ):
+            return {
+                "type": "BEARISH_CHOCH",
+                "signal": "SELL",
+                "level": previous_low,
+                "confirmation": "BODY_CLOSE"
+            }
+
+        return None
