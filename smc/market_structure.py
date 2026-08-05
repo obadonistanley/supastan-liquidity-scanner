@@ -3,35 +3,53 @@ class MarketStructure:
     def __init__(self):
         pass
 
-
     def detect(self, candles):
 
-        if len(candles) < 30:
+        if len(candles) < 40:
             return None
 
-
-        # Last candle
         current = candles[-1]
 
+        previous = candles[-2]
 
-        # Look for recent structure
-        lookback = candles[-15:-1]
-
+        swing = candles[-21:-1]
 
         previous_high = max(
-            c["high"] for c in lookback
+            c["high"] for c in swing
         )
 
         previous_low = min(
-            c["low"] for c in lookback
+            c["low"] for c in swing
         )
 
+        body = abs(
+            current["close"] - current["open"]
+        )
+
+        candle_range = (
+            current["high"] - current["low"]
+        )
+
+        if candle_range == 0:
+            return None
+
+        body_ratio = body / candle_range
+
+        displacement = body_ratio >= 0.60
 
         # ==========================
         # BULLISH BOS
         # ==========================
 
-        if current["close"] > previous_high:
+        if (
+
+            current["close"] > previous_high
+
+            and
+
+            displacement
+
+        ):
 
             return {
 
@@ -49,12 +67,19 @@ class MarketStructure:
 
             }
 
-
         # ==========================
         # BEARISH BOS
         # ==========================
 
-        if current["close"] < previous_low:
+        if (
+
+            current["close"] < previous_low
+
+            and
+
+            displacement
+
+        ):
 
             return {
 
@@ -72,54 +97,72 @@ class MarketStructure:
 
             }
 
-
         # ==========================
-        # DISPLACEMENT CHECK
+        # BULLISH CHOCH
         # ==========================
 
-        last_three = candles[-3:]
+        if (
 
+            previous["close"] < previous["open"]
 
-        bullish_move = (
-            last_three[-1]["close"] >
-            last_three[0]["high"]
-        )
+            and
 
+            current["close"] > previous["high"]
 
-        bearish_move = (
-            last_three[-1]["close"] <
-            last_three[0]["low"]
-        )
+            and
 
+            displacement
 
-        if bullish_move:
+        ):
 
             return {
 
-                "signal":"BUY",
+                "signal": "BUY",
 
-                "bos":"BULLISH_BOS",
+                "bos": "BULLISH_BOS",
 
-                "choch":"BULLISH_CHOCH",
+                "choch": "BULLISH_CHOCH",
 
-                "confirmation":"DISPLACEMENT"
+                "previous_high": previous_high,
+
+                "previous_low": previous_low,
+
+                "confirmation": "DISPLACEMENT"
 
             }
 
+        # ==========================
+        # BEARISH CHOCH
+        # ==========================
 
-        if bearish_move:
+        if (
+
+            previous["close"] > previous["open"]
+
+            and
+
+            current["close"] < previous["low"]
+
+            and
+
+            displacement
+
+        ):
 
             return {
 
-                "signal":"SELL",
+                "signal": "SELL",
 
-                "bos":"BEARISH_BOS",
+                "bos": "BEARISH_BOS",
 
-                "choch":"BEARISH_CHOCH",
+                "choch": "BEARISH_CHOCH",
 
-                "confirmation":"DISPLACEMENT"
+                "previous_high": previous_high,
+
+                "previous_low": previous_low,
+
+                "confirmation": "DISPLACEMENT"
 
             }
-
 
         return None
