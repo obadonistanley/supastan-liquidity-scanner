@@ -3,62 +3,58 @@ class OrderBlock:
     def __init__(self):
         pass
 
+    def detect(self, candles, structure):
 
-    def detect(self, candles):
-
-        if len(candles) < 10:
+        if structure is None:
             return None
 
-
-        ob_candle = candles[-2]
-        confirmation = candles[-1]
-
-
-        body = abs(
-            ob_candle["close"] - ob_candle["open"]
-        )
-
-
-        candle_range = (
-            ob_candle["high"] - ob_candle["low"]
-        )
-
-
-        if candle_range == 0:
+        if len(candles) < 15:
             return None
 
+        signal = structure["signal"]
 
+        # ==========================
+        # BUY Entry Rectangle
+        # Previous swing low before BOS
+        # ==========================
 
-        strength = body / candle_range
+        if signal == "BUY":
 
+            shoulder = candles[-6]
 
+            for candle in candles[-10:-1]:
 
-        # Ignore weak candles
-        if strength < 0.5:
-            return None
+                if candle["low"] < shoulder["low"]:
+                    shoulder = candle
 
+            return {
+                "type": "ENTRY_RECTANGLE",
+                "signal": "BUY",
+                "high": shoulder["high"],
+                "low": shoulder["low"],
+                "entry": (shoulder["high"] + shoulder["low"]) / 2
+            }
 
+        # ==========================
+        # SELL Entry Rectangle
+        # Previous swing high before BOS
+        # ==========================
 
-        # Bullish Order Block
-        # Last bearish candle before bullish displacement
+        if signal == "SELL":
 
-        if (
-            ob_candle["close"] < ob_candle["open"]
-            and confirmation["close"] > ob_candle["high"]
-        ):
-            return "BUY"
+            shoulder = candles[-6]
 
+            for candle in candles[-10:-1]:
 
+                if candle["high"] > shoulder["high"]:
+                    shoulder = candle
 
-        # Bearish Order Block
-        # Last bullish candle before bearish displacement
-
-        if (
-            ob_candle["close"] > ob_candle["open"]
-            and confirmation["close"] < ob_candle["low"]
-        ):
-            return "SELL"
-
-
+            return {
+                "type": "ENTRY_RECTANGLE",
+                "signal": "SELL",
+                "high": shoulder["high"],
+                "low": shoulder["low"],
+                "entry": (shoulder["high"] + shoulder["low"]) / 2
+            }
 
         return None
