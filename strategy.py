@@ -8,14 +8,12 @@ class Strategy:
         self.scanner = Scanner()
         self.deriv = DerivAPI()
 
-    def analyze(self, candles):
+    def analyze(self, candles, timeframe="M5"):
 
         if not candles:
-            return {
-                "signal": "NO DATA"
-            }
+            return {"signal": "NO DATA"}
 
-        return self.scanner.scan(candles)
+        return self.scanner.scan(candles, timeframe)
 
     def get_signal(self, analysis):
 
@@ -30,67 +28,67 @@ class Strategy:
 
             sweep_tf = self.deriv.get_candles(
                 symbol=symbol,
-                count=200,
-                granularity=86400
+                timeframe="D1",
+                count=200
             )
 
             confirmation_tf = self.deriv.get_candles(
                 symbol=symbol,
-                count=200,
-                granularity=14400
+                timeframe="H4",
+                count=200
             )
 
             entry_tf = self.deriv.get_candles(
                 symbol=symbol,
-                count=200,
-                granularity=300
+                timeframe="M5",
+                count=200
             )
+
+            sweep_analysis = self.analyze(sweep_tf, "D1")
+            confirmation_analysis = self.analyze(confirmation_tf, "H4")
+            entry_analysis = self.analyze(entry_tf, "M5")
 
         elif mode == "H1":
 
             sweep_tf = self.deriv.get_candles(
                 symbol=symbol,
-                count=200,
-                granularity=3600
+                timeframe="H1",
+                count=200
             )
-
-            confirmation_tf = None
 
             entry_tf = self.deriv.get_candles(
                 symbol=symbol,
-                count=200,
-                granularity=300
+                timeframe="M5",
+                count=200
             )
+
+            sweep_analysis = self.analyze(sweep_tf, "H1")
+            confirmation_analysis = None
+            entry_analysis = self.analyze(entry_tf, "M5")
 
         elif mode == "M5":
 
             sweep_tf = self.deriv.get_candles(
                 symbol=symbol,
-                count=200,
-                granularity=300
+                timeframe="M5",
+                count=200
             )
-
-            confirmation_tf = None
 
             entry_tf = self.deriv.get_candles(
                 symbol=symbol,
-                count=200,
-                granularity=60
+                timeframe="M1",
+                count=200
             )
+
+            sweep_analysis = self.analyze(sweep_tf, "M5")
+            confirmation_analysis = None
+            entry_analysis = self.analyze(entry_tf, "M1")
 
         else:
 
             return {
                 "error": "Choose D1_H4, H1, or M5"
             }
-
-        sweep_analysis = self.analyze(sweep_tf)
-        entry_analysis = self.analyze(entry_tf)
-
-        if confirmation_tf:
-            confirmation_analysis = self.analyze(confirmation_tf)
-        else:
-            confirmation_analysis = None
 
         sweep_signal = self.get_signal(sweep_analysis)
         entry_signal = self.get_signal(entry_analysis)
@@ -102,24 +100,22 @@ class Strategy:
 
         final_signal = "NO TRADE"
 
-        # H1 and M5 confirmation
-        if sweep_signal == "BUY" and entry_signal == "BUY":
-            final_signal = "BUY"
-
-        elif sweep_signal == "SELL" and entry_signal == "SELL":
-            final_signal = "SELL"
-
-        # D1/H4 requires all three timeframes
         if mode == "D1_H4":
 
             if (
-                sweep_signal == confirmation_signal
-                and confirmation_signal == entry_signal
-                and sweep_signal in ["BUY", "SELL"]
+                sweep_signal == confirmation_signal ==
+                entry_signal and
+                sweep_signal in ["BUY", "SELL"]
             ):
                 final_signal = sweep_signal
-            else:
-                final_signal = "NO TRADE"
+
+        else:
+
+            if (
+                sweep_signal == entry_signal and
+                sweep_signal in ["BUY", "SELL"]
+            ):
+                final_signal = sweep_signal
 
         return {
             "symbol": symbol,
