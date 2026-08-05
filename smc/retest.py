@@ -9,62 +9,57 @@ class Retest:
         if not rectangle:
             return None
 
-        if len(candles) < 5:
+        if len(candles) < 10:
             return None
 
 
-        current = candles[-1]
+        zone_high = rectangle["high"]
+        zone_low = rectangle["low"]
+        signal = rectangle["signal"]
 
 
-        zone_high = rectangle.get("high")
-        zone_low = rectangle.get("low")
-        signal = rectangle.get("signal")
+        # check last 10 candles for OB touch
+        recent = candles[-10:]
 
 
-        if zone_high is None or zone_low is None:
-            return None
+        for candle in recent:
 
 
-        # ==========================
-        # BUY ORDER BLOCK RETEST
-        # ==========================
+            # SELL retest
+            if signal == "SELL":
 
-        if signal == "BUY":
+                if (
+                    candle["high"] >= zone_low
+                    and candle["high"] <= zone_high
+                ):
 
-            if (
-                current["low"] <= zone_high
-                and current["low"] >= zone_low
-            ):
+                    return {
 
-                return {
+                        "signal": "SELL",
+                        "status": "FIRST_RETEST",
+                        "entry": zone_low,
+                        "retest_candle": candle
 
-                    "signal": "BUY",
-                    "status": "FIRST_RETEST",
-                    "entry": zone_high,
-                    "retest_candle": current
-
-                }
+                    }
 
 
-        # ==========================
-        # SELL ORDER BLOCK RETEST
-        # ==========================
 
-        if signal == "SELL":
+            # BUY retest
+            if signal == "BUY":
 
-            if (
-                current["high"] >= zone_low
-                and current["high"] <= zone_high
-            ):
+                if (
+                    candle["low"] <= zone_high
+                    and candle["low"] >= zone_low
+                ):
 
-                return {
+                    return {
 
-                    "signal": "SELL",
-                    "status": "FIRST_RETEST",
-                    "entry": zone_low,
-                    "retest_candle": current
+                        "signal": "BUY",
+                        "status": "FIRST_RETEST",
+                        "entry": zone_high,
+                        "retest_candle": candle
 
-                }
+                    }
 
 
         return None
