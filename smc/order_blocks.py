@@ -8,48 +8,64 @@ class OrderBlock:
         if not structure:
             return None
 
-        bos_index = structure.get("index")
-
-        if bos_index is None or bos_index < 2:
+        if len(candles) < 20:
             return None
 
-        # Search backwards from BOS candle for the last opposite candle
-        for i in range(bos_index - 1, max(bos_index - 10, 0), -1):
+        signal = structure["signal"]
+
+        # Look back for the last opposite candle
+        for i in range(len(candles) - 2, 5, -1):
 
             candle = candles[i]
 
-            # BUY Order Block = last bearish candle before bullish BOS
-            if structure["signal"] == "BUY":
+            # ==========================
+            # BUY ORDER BLOCK
+            # Last bearish candle before bullish BOS
+            # ==========================
+            if signal == "BUY":
 
                 if candle["close"] < candle["open"]:
 
                     return {
+
                         "signal": "BUY",
                         "type": "BUY_ORDER_BLOCK",
                         "status": "FRESH",
-                        "zone": "ENTIRE_CANDLE",
-                        "high": candle["high"],
+                        "zone": "BODY",
+
+                        "high": candle["open"],
                         "low": candle["low"],
+
                         "open": candle["open"],
                         "close": candle["close"],
+
                         "index": i
+
                     }
 
-            # SELL Order Block = last bullish candle before bearish BOS
-            else:
+            # ==========================
+            # SELL ORDER BLOCK
+            # Last bullish candle before bearish BOS
+            # ==========================
+            if signal == "SELL":
 
                 if candle["close"] > candle["open"]:
 
                     return {
+
                         "signal": "SELL",
                         "type": "SELL_ORDER_BLOCK",
                         "status": "FRESH",
-                        "zone": "ENTIRE_CANDLE",
+                        "zone": "BODY",
+
                         "high": candle["high"],
-                        "low": candle["low"],
+                        "low": candle["open"],
+
                         "open": candle["open"],
                         "close": candle["close"],
+
                         "index": i
+
                     }
 
         return None
