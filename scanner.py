@@ -3,6 +3,7 @@ from smc.liquidity import LiquiditySweep
 from smc.market_structure import MarketStructure
 from smc.order_blocks import OrderBlock
 from smc.retest import Retest
+from smc.sequence import SequenceValidator
 
 
 class Scanner:
@@ -14,6 +15,7 @@ class Scanner:
         self.structure = MarketStructure()
         self.rectangle = OrderBlock()
         self.retest = Retest()
+        self.sequence = SequenceValidator()
 
     def scan(self, candles):
 
@@ -36,6 +38,8 @@ class Scanner:
                 "rectangle": None,
 
                 "retest": None,
+
+                "sequence": None,
 
                 "confidence": "25%",
 
@@ -60,6 +64,8 @@ class Scanner:
                 "rectangle": None,
 
                 "retest": None,
+
+                "sequence": None,
 
                 "confidence": "50%",
 
@@ -88,6 +94,8 @@ class Scanner:
 
                 "retest": None,
 
+                "sequence": None,
+
                 "confidence": "75%",
 
                 "reason": "Waiting for Fresh Order Block"
@@ -110,6 +118,8 @@ class Scanner:
 
                 "retest": None,
 
+                "sequence": None,
+
                 "confidence": "80%",
 
                 "reason": "Order Block already mitigated"
@@ -121,7 +131,19 @@ class Scanner:
             rectangle
         )
 
-        if retest is None:
+        sequence = self.sequence.validate(
+
+            liquidity,
+
+            structure,
+
+            rectangle,
+
+            retest
+
+        )
+
+        if not sequence["valid"]:
 
             return {
 
@@ -135,11 +157,13 @@ class Scanner:
 
                 "rectangle": rectangle,
 
-                "retest": None,
+                "retest": retest,
+
+                "sequence": sequence,
 
                 "confidence": "90%",
 
-                "reason": "Waiting for Order Block Retest"
+                "reason": sequence["reason"]
 
             }
 
@@ -157,8 +181,10 @@ class Scanner:
 
             "retest": retest,
 
+            "sequence": sequence,
+
             "confidence": "100%",
 
-            "reason": "Liquidity Sweep → BOS / CHOCH → Fresh Order Block → Retest confirmed"
+            "reason": "Liquidity Sweep → BOS / CHOCH → Fresh Order Block → First Retest → ENTRY"
 
         }
