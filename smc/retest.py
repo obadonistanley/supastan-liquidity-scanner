@@ -3,56 +3,68 @@ class Retest:
     def __init__(self):
         pass
 
+
     def detect(self, candles, rectangle):
 
-        if rectangle is None:
+        if not rectangle:
             return None
 
-        signal = rectangle["signal"]
-
-        high = rectangle["high"]
-        low = rectangle["low"]
-
-        ob_index = rectangle["index"]
-
-        # Start checking AFTER the BOS candle
-        future = candles[ob_index + 2:]
-
-        if not future:
+        if len(candles) < 5:
             return None
 
-        for candle in future:
 
-            if signal == "BUY":
+        current = candles[-1]
 
-                # Order block invalidated
-                if candle["close"] < low:
-                    return None
 
-                # First touch of the order block
-                if low <= candle["low"] <= high:
+        zone_high = rectangle.get("high")
+        zone_low = rectangle.get("low")
+        signal = rectangle.get("signal")
 
-                    return {
-                        "signal": "BUY",
-                        "status": "FIRST_RETEST",
-                        "entry": high,
-                        "retest_candle": candle
-                    }
 
-            elif signal == "SELL":
+        if zone_high is None or zone_low is None:
+            return None
 
-                # Order block invalidated
-                if candle["close"] > high:
-                    return None
 
-                # First touch of the order block
-                if low <= candle["high"] <= high:
+        # ==========================
+        # BUY ORDER BLOCK RETEST
+        # ==========================
 
-                    return {
-                        "signal": "SELL",
-                        "status": "FIRST_RETEST",
-                        "entry": low,
-                        "retest_candle": candle
-                    }
+        if signal == "BUY":
+
+            if (
+                current["low"] <= zone_high
+                and current["low"] >= zone_low
+            ):
+
+                return {
+
+                    "signal": "BUY",
+                    "status": "FIRST_RETEST",
+                    "entry": zone_high,
+                    "retest_candle": current
+
+                }
+
+
+        # ==========================
+        # SELL ORDER BLOCK RETEST
+        # ==========================
+
+        if signal == "SELL":
+
+            if (
+                current["high"] >= zone_low
+                and current["high"] <= zone_high
+            ):
+
+                return {
+
+                    "signal": "SELL",
+                    "status": "FIRST_RETEST",
+                    "entry": zone_low,
+                    "retest_candle": current
+
+                }
+
 
         return None
