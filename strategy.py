@@ -13,9 +13,7 @@ class Strategy:
     def analyze(self, candles, timeframe):
 
         if not candles:
-            return {
-                "signal": "NO DATA"
-            }
+            return {"signal": "NO DATA"}
 
         return self.scanner.scan(
             candles,
@@ -23,23 +21,12 @@ class Strategy:
         )
 
 
-    def get_liquidity_signal(self, analysis):
+    def get_liquidity(self, analysis):
 
-        if analysis and analysis.get("liquidity"):
-
+        if analysis.get("liquidity"):
             return analysis["liquidity"].get("signal")
 
         return None
-
-
-    def get_signal(self, analysis):
-
-        if analysis:
-
-            return analysis.get("signal")
-
-        return None
-
 
 
     def run(self, symbol, mode):
@@ -47,237 +34,152 @@ class Strategy:
 
         if mode == "D1_H4":
 
-            d1 = self.deriv.get_candles(
-                symbol,
-                "D1",
-                200
-            )
-
-            h4 = self.deriv.get_candles(
-                symbol,
-                "H4",
-                200
-            )
-
-            m5 = self.deriv.get_candles(
-                symbol,
-                "M5",
-                200
-            )
+            d1 = self.deriv.get_candles(symbol,"D1",200)
+            h4 = self.deriv.get_candles(symbol,"H4",200)
+            m5 = self.deriv.get_candles(symbol,"M5",200)
 
 
-            sweep_analysis = self.analyze(
-                d1,
-                "D1"
-            )
-
-            confirmation_analysis = self.analyze(
-                h4,
-                "H4"
-            )
-
-            entry_analysis = self.analyze(
-                m5,
-                "M5"
-            )
+            higher = self.analyze(d1,"D1")
+            confirm = self.analyze(h4,"H4")
+            entry = self.analyze(m5,"M5")
 
 
         elif mode == "H1":
 
-            h1 = self.deriv.get_candles(
-                symbol,
-                "H1",
-                200
-            )
-
-            m5 = self.deriv.get_candles(
-                symbol,
-                "M5",
-                200
-            )
+            h1 = self.deriv.get_candles(symbol,"H1",200)
+            m5 = self.deriv.get_candles(symbol,"M5",200)
 
 
-            sweep_analysis = self.analyze(
-                h1,
-                "H1"
-            )
-
-            confirmation_analysis = None
-
-            entry_analysis = self.analyze(
-                m5,
-                "M5"
-            )
+            higher = self.analyze(h1,"H1")
+            confirm = None
+            entry = self.analyze(m5,"M5")
 
 
         elif mode == "M5":
 
-            m5 = self.deriv.get_candles(
-                symbol,
-                "M5",
-                200
-            )
-
-            m1 = self.deriv.get_candles(
-                symbol,
-                "M1",
-                200
-            )
+            m5 = self.deriv.get_candles(symbol,"M5",200)
+            m1 = self.deriv.get_candles(symbol,"M1",200)
 
 
-            sweep_analysis = self.analyze(
-                m5,
-                "M5"
-            )
-
-            confirmation_analysis = None
-
-            entry_analysis = self.analyze(
-                m1,
-                "M1"
-            )
+            higher = self.analyze(m5,"M5")
+            confirm = None
+            entry = self.analyze(m1,"M1")
 
 
         else:
 
-            return {
-                "error": "Invalid mode"
-            }
+            return {"error":"Invalid mode"}
 
 
 
-        final_signal = "NO TRADE"
+        final_signal="NO TRADE"
 
 
-
-        # ===============================
-        # D1/H4 LIQUIDITY → M5 EXECUTION
-        # ===============================
-
-        if mode == "D1_H4":
+        entry_signal = entry.get("signal")
 
 
-            d1_liq = self.get_liquidity_signal(
-                sweep_analysis
-            )
+        valid_entry = (
 
-            h4_liq = self.get_liquidity_signal(
-                confirmation_analysis
-            )
+            entry.get("structure")
+
+            and
+
+            entry.get("rectangle")
+
+            and
+
+            entry.get("retest")
+
+        )
+
+
+        if mode=="D1_H4":
+
+
+            d1_liq = self.get_liquidity(higher)
+
+            h4_liq = self.get_liquidity(confirm)
 
 
             if (
+
+                d1_liq
+
+                and
 
                 d1_liq == h4_liq
 
                 and
 
-                d1_liq in ["BUY","SELL"]
+                valid_entry
 
                 and
 
-                entry_analysis.get("structure")
-
-                and
-
-                entry_analysis["structure"]["signal"] == d1_liq
-
-                and
-
-                entry_analysis.get("rectangle")
-
-                and
-
-                entry_analysis["rectangle"]["signal"] == d1_liq
-
-                and
-
-                entry_analysis.get("retest")
-
-                and
-
-                entry_analysis["retest"]["signal"] == d1_liq
+                entry_signal == d1_liq
 
             ):
 
-                final_signal = d1_liq
+                final_signal = entry_signal
 
 
 
-        # ===============================
-        # H1 LIQUIDITY → M5 EXECUTION
-        # ===============================
-
-        elif mode == "H1":
+        elif mode=="H1":
 
 
-            h1_liq = self.get_liquidity_signal(
-                sweep_analysis
-            )
+            h1_liq = self.get_liquidity(higher)
 
 
             if (
 
-                h1_liq in ["BUY","SELL"]
+                h1_liq
 
                 and
 
-                entry_analysis.get("structure")
+                valid_entry
 
                 and
 
-                entry_analysis["structure"]["signal"] == h1_liq
-
-                and
-
-                entry_analysis.get("rectangle")
-
-                and
-
-                entry_analysis["rectangle"]["signal"] == h1_liq
-
-                and
-
-                entry_analysis.get("retest")
-
-                and
-
-                entry_analysis["retest"]["signal"] == h1_liq
+                entry_signal == h1_liq
 
             ):
 
-                final_signal = h1_liq
+                final_signal = entry_signal
 
 
 
-        # ===============================
-        # M5 LIQUIDITY → M1 EXECUTION
-        # ===============================
-
-        elif mode == "M5":
+        elif mode=="M5":
 
 
-            m5_liq = self.get_liquidity_signal(
-                sweep_analysis
-            )
+            if valid_entry:
+
+                final_signal = entry_signal
 
 
-            if (
 
-                m5_liq in ["BUY","SELL"]
+        return {
 
-                and
+            "symbol":symbol,
 
-                entry_analysis.get("structure")
+            "mode":mode,
 
-                and
+            "final_signal":final_signal,
 
-                entry_analysis["structure"]["signal"] == m5_liq
+            "higher_timeframe":higher,
 
-                and
+            "confirmation":confirm,
 
-                entry_analysis.get("rectangle")
+            "execution":entry,
 
-                and
+            "trade_plan":{
 
-                entry_analysis["rectangle"]["signal"] == m5_liq
+                "entry":"Order Block Retest",
+
+                "stop_loss":"Beyond Liquidity Sweep",
+
+                "take_profit":"1:3 RR",
+
+                "risk_reward":"1:3+"
+
+            }
+
+        }
