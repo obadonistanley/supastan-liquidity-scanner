@@ -5,20 +5,17 @@ class MarketStructure:
 
     def detect(self, candles):
 
-        if len(candles) < 30:
+        if len(candles) < 20:
             return None
 
+        recent = candles[-20:-1]
         current = candles[-1]
-        history = candles[-21:-1]
 
-        swing_high = max(history, key=lambda x: x["high"])
-        swing_low = min(history, key=lambda x: x["low"])
+        previous_high = max(c["high"] for c in recent)
+        previous_low = min(c["low"] for c in recent)
 
-        previous_high = swing_high["high"]
-        previous_low = swing_low["low"]
-
-        first_close = history[0]["close"]
-        last_close = history[-1]["close"]
+        first_close = recent[0]["close"]
+        last_close = recent[-1]["close"]
 
         bullish_context = last_close > first_close
         bearish_context = last_close < first_close
