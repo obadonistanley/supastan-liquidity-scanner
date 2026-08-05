@@ -17,26 +17,41 @@ class Scanner:
         self.retest = Retest()
         self.confidence = Confidence()
 
+
     def scan(self, candles, timeframe="M5"):
 
         trend = self.trend.detect(candles)
+
 
         liquidity = self.liquidity.detect(
             candles,
             timeframe
         )
 
-        structure = self.structure.detect(candles)
+
+        # Safety check - keep correct timeframe label
+        if liquidity:
+
+            liquidity["timeframe"] = timeframe.upper()
+
+
+
+        structure = self.structure.detect(
+            candles
+        )
+
 
         rectangle = self.rectangle.detect(
             candles,
             structure
         )
 
+
         retest = self.retest.detect(
             candles,
             rectangle
         )
+
 
         confidence = self.confidence.calculate(
             trend,
@@ -46,7 +61,10 @@ class Scanner:
             retest
         )
 
+
         signal = "NO TRADE"
+
+
 
         if (
             liquidity
@@ -55,13 +73,20 @@ class Scanner:
             and retest
         ):
 
+
             if (
                 liquidity["signal"]
-                == structure["signal"]
-                == rectangle["signal"]
-                == retest["signal"]
+                ==
+                structure["signal"]
+                ==
+                rectangle["signal"]
+                ==
+                retest["signal"]
             ):
+
                 signal = liquidity["signal"]
+
+
 
         return {
 
@@ -88,7 +113,8 @@ class Scanner:
             "reason": (
                 "Complete SMC confirmation"
                 if signal != "NO TRADE"
-                else "Waiting for full confirmation"
+                else
+                "Waiting for full confirmation"
             )
 
         }
