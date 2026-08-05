@@ -32,6 +32,21 @@ class Strategy:
 
 
 
+    def valid_confirmation(self, analysis):
+
+        if not analysis:
+            return False
+
+        return (
+            analysis.get("structure")
+            and
+            analysis.get("rectangle")
+            and
+            analysis.get("retest")
+        )
+
+
+
     def run(self, symbol, mode):
 
 
@@ -56,24 +71,15 @@ class Strategy:
             )
 
 
-            sweep_analysis = self.analyze(
-                d1,
-                "D1"
-            )
+            sweep_analysis = self.analyze(d1,"D1")
 
-            confirmation_analysis = self.analyze(
-                h4,
-                "H4"
-            )
+            confirmation_analysis = self.analyze(h4,"H4")
 
-            entry_analysis = self.analyze(
-                m5,
-                "M5"
-            )
+            entry_analysis = self.analyze(m5,"M5")
+
 
 
         elif mode == "H1":
-
 
             h1 = self.deriv.get_candles(
                 symbol=symbol,
@@ -81,7 +87,6 @@ class Strategy:
                 count=200
             )
 
-
             m5 = self.deriv.get_candles(
                 symbol=symbol,
                 timeframe="M5",
@@ -89,28 +94,21 @@ class Strategy:
             )
 
 
-            sweep_analysis = self.analyze(
-                h1,
-                "H1"
-            )
+            sweep_analysis = self.analyze(h1,"H1")
 
             confirmation_analysis = None
 
-            entry_analysis = self.analyze(
-                m5,
-                "M5"
-            )
+            entry_analysis = self.analyze(m5,"M5")
+
 
 
         elif mode == "M5":
 
-
             m5 = self.deriv.get_candles(
                 symbol=symbol,
                 timeframe="M5",
                 count=200
             )
-
 
             m1 = self.deriv.get_candles(
                 symbol=symbol,
@@ -119,23 +117,18 @@ class Strategy:
             )
 
 
-            sweep_analysis = self.analyze(
-                m5,
-                "M5"
-            )
+            sweep_analysis = self.analyze(m5,"M5")
 
             confirmation_analysis = None
 
-            entry_analysis = self.analyze(
-                m1,
-                "M1"
-            )
+            entry_analysis = self.analyze(m1,"M1")
+
 
 
         else:
 
             return {
-                "error": "Choose D1_H4, H1, or M5"
+                "error":"Choose D1_H4, H1, or M5"
             }
 
 
@@ -143,6 +136,12 @@ class Strategy:
         sweep_signal = self.get_signal(
             sweep_analysis
         )
+
+
+        confirmation_signal = self.get_signal(
+            confirmation_analysis
+        )
+
 
         entry_signal = self.get_signal(
             entry_analysis
@@ -154,75 +153,81 @@ class Strategy:
 
 
         # ==========================
-        # D1/H4 STRATEGY
+        # D1/H4
         # ==========================
 
         if mode == "D1_H4":
 
-            h4_signal = self.get_signal(
-                confirmation_analysis
-            )
-
 
             if (
+
                 sweep_signal in ["BUY","SELL"]
+
                 and
-                sweep_signal == h4_signal
+
+                confirmation_signal == sweep_signal
+
                 and
-                entry_analysis.get("structure")
+
+                entry_signal == sweep_signal
+
                 and
-                entry_analysis.get("rectangle")
-                and
-                entry_analysis.get("retest")
+
+                self.valid_confirmation(entry_analysis)
+
             ):
 
-                final_signal = entry_signal
+                final_signal = sweep_signal
 
 
 
         # ==========================
-        # H1 STRATEGY
+        # H1
         # ==========================
 
         elif mode == "H1":
 
 
             if (
+
                 sweep_signal in ["BUY","SELL"]
+
                 and
-                entry_analysis.get("structure")
-                and
-                entry_analysis.get("rectangle")
-                and
-                entry_analysis.get("retest")
-                and
+
                 entry_signal == sweep_signal
+
+                and
+
+                self.valid_confirmation(entry_analysis)
+
             ):
 
-                final_signal = entry_signal
+                final_signal = sweep_signal
 
 
 
         # ==========================
-        # M5 STRATEGY
+        # M5
         # ==========================
 
         elif mode == "M5":
 
 
             if (
+
                 sweep_signal in ["BUY","SELL"]
+
                 and
-                entry_analysis.get("structure")
-                and
-                entry_analysis.get("rectangle")
-                and
-                entry_analysis.get("retest")
-                and
+
                 entry_signal == sweep_signal
+
+                and
+
+                self.valid_confirmation(entry_analysis)
+
             ):
 
-                final_signal = entry_signal
+                final_signal = sweep_signal
 
 
 
@@ -240,15 +245,16 @@ class Strategy:
 
             "entry_analysis": entry_analysis,
 
+
             "trade_plan": {
 
-                "entry": "Order Block Retest",
+                "entry":"Order Block Retest",
 
-                "stop_loss": "Beyond Liquidity Sweep",
+                "stop_loss":"Beyond Liquidity Sweep",
 
-                "take_profit": "Minimum 1:3 RR",
+                "take_profit":"Minimum 1:3 RR",
 
-                "risk_reward": "1:3+"
+                "risk_reward":"1:3+"
 
             }
 
