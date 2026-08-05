@@ -17,41 +17,32 @@ class Scanner:
         self.retest = Retest()
         self.confidence = Confidence()
 
-
     def scan(self, candles, timeframe="M5"):
 
         trend = self.trend.detect(candles)
-
 
         liquidity = self.liquidity.detect(
             candles,
             timeframe
         )
 
-
-        # Safety check - keep correct timeframe label
+        # Keep correct timeframe label
         if liquidity:
-
             liquidity["timeframe"] = timeframe.upper()
-
-
 
         structure = self.structure.detect(
             candles
         )
-
 
         rectangle = self.rectangle.detect(
             candles,
             structure
         )
 
-
         retest = self.retest.detect(
             candles,
             rectangle
         )
-
 
         confidence = self.confidence.calculate(
             trend,
@@ -61,10 +52,17 @@ class Scanner:
             retest
         )
 
-
         signal = "NO TRADE"
+        status = "WAITING_FOR_LIQUIDITY"
 
+        if liquidity:
+            status = "WAITING_FOR_BOS_CHOCH"
 
+        if liquidity and structure:
+            status = "WAITING_FOR_ORDER_BLOCK"
+
+        if liquidity and structure and rectangle:
+            status = "WAITING_FOR_RETEST"
 
         if (
             liquidity
@@ -73,24 +71,25 @@ class Scanner:
             and retest
         ):
 
-
             if (
                 liquidity["signal"]
-                ==
-                structure["signal"]
-                ==
-                rectangle["signal"]
-                ==
-                retest["signal"]
+                == structure["signal"]
+                == rectangle["signal"]
+                == retest["signal"]
             ):
 
                 signal = liquidity["signal"]
+                status = "READY"
 
+            else:
 
+                status = "SIGNAL_MISMATCH"
 
         return {
 
             "signal": signal,
+
+            "status": status,
 
             "trend": trend,
 
@@ -113,8 +112,7 @@ class Scanner:
             "reason": (
                 "Complete SMC confirmation"
                 if signal != "NO TRADE"
-                else
-                "Waiting for full confirmation"
+                else status
             )
 
         }
