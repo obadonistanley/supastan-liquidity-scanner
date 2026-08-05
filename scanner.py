@@ -2,6 +2,7 @@ from utils.trend import TrendFilter
 from smc.liquidity import LiquiditySweep
 from smc.market_structure import MarketStructure
 from smc.order_blocks import OrderBlock
+from smc.retest import Retest
 
 
 class Scanner:
@@ -12,6 +13,7 @@ class Scanner:
         self.liquidity = LiquiditySweep()
         self.structure = MarketStructure()
         self.rectangle = OrderBlock()
+        self.retest = Retest()
 
     def scan(self, candles):
 
@@ -32,6 +34,8 @@ class Scanner:
                 "structure": None,
 
                 "rectangle": None,
+
+                "retest": None,
 
                 "confidence": "25%",
 
@@ -54,6 +58,8 @@ class Scanner:
                 "structure": None,
 
                 "rectangle": None,
+
+                "retest": None,
 
                 "confidence": "50%",
 
@@ -80,9 +86,60 @@ class Scanner:
 
                 "rectangle": None,
 
+                "retest": None,
+
                 "confidence": "75%",
 
-                "reason": "Waiting for fresh Order Block retest"
+                "reason": "Waiting for Fresh Order Block"
+
+            }
+
+        if rectangle["status"] != "FRESH":
+
+            return {
+
+                "signal": "NO TRADE",
+
+                "trend": trend,
+
+                "liquidity": liquidity,
+
+                "structure": structure,
+
+                "rectangle": rectangle,
+
+                "retest": None,
+
+                "confidence": "80%",
+
+                "reason": "Order Block already mitigated"
+
+            }
+
+        retest = self.retest.detect(
+            candles,
+            rectangle
+        )
+
+        if retest is None:
+
+            return {
+
+                "signal": "NO TRADE",
+
+                "trend": trend,
+
+                "liquidity": liquidity,
+
+                "structure": structure,
+
+                "rectangle": rectangle,
+
+                "retest": None,
+
+                "confidence": "90%",
+
+                "reason": "Waiting for Order Block Retest"
 
             }
 
@@ -98,8 +155,10 @@ class Scanner:
 
             "rectangle": rectangle,
 
+            "retest": retest,
+
             "confidence": "100%",
 
-            "reason": "Liquidity Sweep → BOS → CHOCH → Fresh Order Block → Retest confirmed"
+            "reason": "Liquidity Sweep → BOS / CHOCH → Fresh Order Block → Retest confirmed"
 
         }
