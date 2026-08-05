@@ -1,32 +1,25 @@
-from strategy import Strategy
+from strategies.d1_h4_strategy import D1H4Strategy
+from strategies.h1_strategy import H1Strategy
+from strategies.m5_strategy import M5Strategy
 
 
 class StrategyEngine:
 
     def __init__(self):
-        self.strategy = Strategy()
+
+        self.d1_h4 = D1H4Strategy()
+        self.h1 = H1Strategy()
+        self.m5 = M5Strategy()
 
     def scan_all(self, symbol):
 
         results = {}
 
-        # Strategy 1
-        results["D1_H4"] = self.strategy.run(
-            symbol,
-            "D1_H4"
-        )
+        results["D1_H4"] = self.d1_h4.run(symbol)
 
-        # Strategy 2
-        results["H1"] = self.strategy.run(
-            symbol,
-            "H1"
-        )
+        results["H1"] = self.h1.run(symbol)
 
-        # Strategy 3
-        results["M5"] = self.strategy.run(
-            symbol,
-            "M5"
-        )
+        results["M5"] = self.m5.run(symbol)
 
         return results
 
@@ -45,10 +38,10 @@ class StrategyEngine:
             elif value["final_signal"] == "SELL":
                 sell += 1
 
-        if buy > sell:
+        if buy >= 2:
             overall = "BUY"
 
-        elif sell > buy:
+        elif sell >= 2:
             overall = "SELL"
 
         else:
