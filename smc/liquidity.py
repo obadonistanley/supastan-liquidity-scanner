@@ -3,63 +3,93 @@ class LiquiditySweep:
     def __init__(self):
         pass
 
-
-    def detect(self, candles):
+    def detect(self, candles, timeframe="M5"):
 
         if len(candles) < 20:
             return None
 
-
         recent = candles[-20:-1]
         current = candles[-1]
 
-
         previous_high = max(c["high"] for c in recent)
         previous_low = min(c["low"] for c in recent)
-
 
         candle_body = abs(
             current["close"] - current["open"]
         )
 
-
         upper_wick = (
-            current["high"] - max(
-                current["open"],
-                current["close"]
-            )
+            current["high"] -
+            max(current["open"], current["close"])
         )
-
 
         lower_wick = (
-            min(
-                current["open"],
-                current["close"]
-            ) - current["low"]
+            min(current["open"], current["close"]) -
+            current["low"]
         )
 
+        # =====================================
+        # M5 STRATEGY
+        # WICK SWEEP ONLY
+        # =====================================
 
-        # BUY SIDE LIQUIDITY SWEEP
-        # Price grabs previous highs and rejects
+        if timeframe == "M5":
 
-        if (
-            current["high"] > previous_high
-            and current["close"] < previous_high
-            and upper_wick > candle_body
-        ):
-            return "SELL"
+            # BUY SIDE LIQUIDITY
+            # Sweep previous highs with wick only
 
+            if (
+                current["high"] > previous_high
+                and current["close"] < previous_high
+                and upper_wick > candle_body
+            ):
+                return {
+                    "signal": "SELL",
+                    "sweep": "WICK",
+                    "level": previous_high,
+                    "timeframe": timeframe
+                }
 
+            # SELL SIDE LIQUIDITY
+            # Sweep previous lows with wick only
 
-        # SELL SIDE LIQUIDITY SWEEP
-        # Price grabs previous lows and rejects
+            if (
+                current["low"] < previous_low
+                and current["close"] > previous_low
+                and lower_wick > candle_body
+            ):
+                return {
+                    "signal": "BUY",
+                    "sweep": "WICK",
+                    "level": previous_low,
+                    "timeframe": timeframe
+                }
 
-        if (
-            current["low"] < previous_low
-            and current["close"] > previous_low
-            and lower_wick > candle_body
-        ):
-            return "BUY"
+        # =====================================
+        # H1 / H4 / D1
+        # BODY OR WICK SWEEP
+        # =====================================
 
+        else:
+
+            # BUY SIDE LIQUIDITY
+
+            if current["high"] > previous_high:
+                return {
+                    "signal": "SELL",
+                    "sweep": "BODY_OR_WICK",
+                    "level": previous_high,
+                    "timeframe": timeframe
+                }
+
+            # SELL SIDE LIQUIDITY
+
+            if current["low"] < previous_low:
+                return {
+                    "signal": "BUY",
+                    "sweep": "BODY_OR_WICK",
+                    "level": previous_low,
+                    "timeframe": timeframe
+                }
 
         return None
