@@ -1,67 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Supastan AI Liquidity Scanner</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
+<title>Supastan AI Liquidity Scanner</title>
 
-    body{
-        background:#0d1117;
-        color:white;
-        font-family:Arial;
-        text-align:center;
-        padding:30px;
-    }
+<style>
 
-    .card{
-        background:#161b22;
-        max-width:420px;
-        margin:auto;
-        padding:30px;
-        border-radius:20px;
-        box-shadow:0 0 15px #000;
-    }
+body{
+    background:#0d1117;
+    color:white;
+    font-family:Arial,Helvetica,sans-serif;
+    text-align:center;
+    padding:40px;
+}
 
-    h1{
-        color:#00ff99;
-    }
+.box{
+    max-width:700px;
+    margin:auto;
+    background:#161b22;
+    padding:30px;
+    border-radius:12px;
+}
 
-    button{
-        width:100%;
-        padding:18px;
-        font-size:22px;
-        border:none;
-        border-radius:12px;
-        background:#00ff99;
-        cursor:pointer;
-        margin-top:20px;
-    }
+h1{
+    color:#00ff99;
+}
 
-    #result{
-        margin-top:25px;
-        text-align:left;
-        background:#0d1117;
-        padding:20px;
-        border-radius:12px;
-        white-space:pre-wrap;
-        font-size:18px;
-    }
+button{
+    background:#00ff99;
+    color:black;
+    border:none;
+    padding:15px 30px;
+    font-size:18px;
+    border-radius:8px;
+    cursor:pointer;
+    width:100%;
+}
 
-    </style>
+button:hover{
+    background:#00cc77;
+}
+
+#result{
+    margin-top:20px;
+    white-space:pre-wrap;
+    text-align:left;
+    background:#0d1117;
+    padding:15px;
+    border-radius:8px;
+    line-height:1.7;
+    font-size:17px;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<div class="card">
+<div class="box">
 
 <h1>Supastan AI Liquidity Scanner</h1>
 
-<p>Click below to scan Volatility 75 Index.</p>
+<p>Scan all major Deriv Volatility Indices.</p>
 
-<button onclick="scan()">Scan Market</button>
+<button onclick="scan()">
+Scan All Markets
+</button>
 
-<div id="result">Waiting for scan...</div>
+<div id="result">
+Click the button above to begin scanning.
+</div>
 
 </div>
 
@@ -69,54 +80,75 @@
 
 async function scan(){
 
-document.getElementById("result").innerHTML="Scanning...";
+document.getElementById("result").innerHTML="🔄 Scanning all markets...";
 
-let response=await fetch("/scan/R_75");
+const symbols=[
+"R_10",
+"R_25",
+"R_50",
+"R_75",
+"R_100"
+];
+
+let output="";
+
+for(const symbol of symbols){
+
+try{
+
+let response=await fetch("/scan/"+symbol);
 
 let data=await response.json();
 
-document.getElementById("result").innerHTML=
-`
-📊 SYMBOL: ${data.symbol}
+let icon="🟡";
 
-🌍 MARKET:
-${data.market}
+if(data.analysis.signal==="BUY"){
+icon="🟢";
+}
 
-⏰ TIMEFRAME:
-${data.timeframe}
+if(data.analysis.signal==="SELL"){
+icon="🔴";
+}
 
-📈 TREND:
+output+=`
+━━━━━━━━━━━━━━━━━━━━
+
+${icon} ${symbol}
+
+📈 Trend:
 ${data.analysis.trend}
 
-🚦 SIGNAL:
+🚦 Signal:
 ${data.analysis.signal}
 
-🎯 CONFIDENCE:
+🎯 Confidence:
 ${data.analysis.confidence}
 
-📝 REASON:
+📝 Reason:
 ${data.analysis.reason}
 
-💰 ENTRY:
-${data.trade_setup.entry}
-
-🛑 STOP LOSS:
-${data.trade_setup.stop_loss}
-
-🎯 TAKE PROFIT:
-${data.trade_setup.take_profit}
-
-⚖️ RISK/REWARD:
-${data.trade_setup.risk_reward}
-
-📉 CANDLES:
-${data.candles}
 `;
+
+}catch(error){
+
+output+=`
+━━━━━━━━━━━━━━━━━━━━
+
+❌ ${symbol}
+
+Unable to scan market.
+
+`;
+
+}
+
+}
+
+document.getElementById("result").innerHTML=output;
 
 }
 
 </script>
 
 </body>
-
 </html>
