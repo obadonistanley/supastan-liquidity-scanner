@@ -1,26 +1,64 @@
-
 import websocket
 import json
-import time
 
 
 class DerivAPI:
 
     def __init__(self):
+
         self.app_id = "1089"
-        self.url = f"wss://ws.derivws.com/websockets/v3?app_id={self.app_id}"
 
+        self.url = (
+            f"wss://ws.derivws.com/websockets/v3?app_id={self.app_id}"
+        )
 
-    def get_candles(self, symbol, count=250, granularity=900):
+        self.timeframes = {
+
+            "M1": 60,
+
+            "M5": 300,
+
+            "M15": 900,
+
+            "H1": 3600,
+
+            "H4": 14400,
+
+            "D1": 86400
+
+        }
+
+    def get_candles(
+
+        self,
+
+        symbol,
+
+        timeframe="M15",
+
+        count=250
+
+    ):
+
+        granularity = self.timeframes.get(
+            timeframe.upper(),
+            900
+        )
 
         ws = websocket.create_connection(self.url)
 
         request = {
+
             "ticks_history": symbol,
+
             "count": count,
+
             "end": "latest",
+
             "style": "candles",
+
             "granularity": granularity
+
         }
 
         ws.send(json.dumps(request))
@@ -31,15 +69,39 @@ class DerivAPI:
 
         candles = []
 
-        if "candles" in response:
+        if "candles" not in response:
+            return candles
 
-            for candle in response["candles"]:
-                candles.append({
-                    "time": candle["epoch"],
-                    "open": float(candle["open"]),
-                    "high": float(candle["high"]),
-                    "low": float(candle["low"]),
-                    "close": float(candle["close"])
-                })
+        for candle in response["candles"]:
+
+            candles.append({
+
+                "time": candle["epoch"],
+
+                "open": float(candle["open"]),
+
+                "high": float(candle["high"]),
+
+                "low": float(candle["low"]),
+
+                "close": float(candle["close"])
+
+            })
 
         return candles
+
+    def get_multi_timeframe(self, symbol):
+
+        return {
+
+            "D1": self.get_candles(symbol, "D1"),
+
+            "H4": self.get_candles(symbol, "H4"),
+
+            "H1": self.get_candles(symbol, "H1"),
+
+            "M5": self.get_candles(symbol, "M5"),
+
+            "M1": self.get_candles(symbol, "M1")
+
+        }
