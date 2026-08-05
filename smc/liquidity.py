@@ -14,29 +14,25 @@ class LiquiditySweep:
         previous_high = max(c["high"] for c in recent)
         previous_low = min(c["low"] for c in recent)
 
-        candle_body = abs(
-            current["close"] - current["open"]
+        candle_body = abs(current["close"] - current["open"])
+
+        upper_wick = current["high"] - max(
+            current["open"],
+            current["close"]
         )
 
-        upper_wick = (
-            current["high"] -
-            max(current["open"], current["close"])
-        )
+        lower_wick = min(
+            current["open"],
+            current["close"]
+        ) - current["low"]
 
-        lower_wick = (
-            min(current["open"], current["close"]) -
-            current["low"]
-        )
+        timeframe = timeframe.upper()
 
-        # =====================================
-        # M5 STRATEGY
-        # WICK SWEEP ONLY
-        # =====================================
+        # ==========================
+        # M5 = WICK ONLY
+        # ==========================
 
         if timeframe == "M5":
-
-            # BUY SIDE LIQUIDITY
-            # Sweep previous highs with wick only
 
             if (
                 current["high"] > previous_high
@@ -50,9 +46,6 @@ class LiquiditySweep:
                     "timeframe": timeframe
                 }
 
-            # SELL SIDE LIQUIDITY
-            # Sweep previous lows with wick only
-
             if (
                 current["low"] < previous_low
                 and current["close"] > previous_low
@@ -65,14 +58,12 @@ class LiquiditySweep:
                     "timeframe": timeframe
                 }
 
-        # =====================================
+        # ==========================
         # H1 / H4 / D1
-        # BODY OR WICK SWEEP
-        # =====================================
+        # BODY OR WICK
+        # ==========================
 
         else:
-
-            # BUY SIDE LIQUIDITY
 
             if current["high"] > previous_high:
                 return {
@@ -81,8 +72,6 @@ class LiquiditySweep:
                     "level": previous_high,
                     "timeframe": timeframe
                 }
-
-            # SELL SIDE LIQUIDITY
 
             if current["low"] < previous_low:
                 return {
