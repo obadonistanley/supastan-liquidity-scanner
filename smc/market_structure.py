@@ -9,10 +9,8 @@ class MarketStructure:
         if len(candles) < 20:
             return None
 
-
         recent = candles[-20:-1]
         current = candles[-1]
-
 
         previous_high = max(
             c["high"] for c in recent
@@ -22,62 +20,65 @@ class MarketStructure:
             c["low"] for c in recent
         )
 
-
-        # Calculate recent trend direction
-
+        # Trend Context
         last_close = recent[-1]["close"]
         first_close = recent[0]["close"]
-
 
         bullish_context = last_close > first_close
         bearish_context = last_close < first_close
 
-
-
+        # ==========================
         # Bullish BOS
-        # Price breaks structure and confirms above
-
+        # ==========================
         if (
             current["high"] > previous_high
             and current["close"] > previous_high
             and bullish_context
         ):
-            return "BUY"
+            return {
+                "type": "BULLISH_BOS",
+                "signal": "BUY",
+                "level": previous_high
+            }
 
-
-
+        # ==========================
         # Bearish BOS
-        # Price breaks structure and confirms below
-
+        # ==========================
         if (
             current["low"] < previous_low
             and current["close"] < previous_low
             and bearish_context
         ):
-            return "SELL"
+            return {
+                "type": "BEARISH_BOS",
+                "signal": "SELL",
+                "level": previous_low
+            }
 
-
-
-        # CHoCH bullish reversal
-        # Previous bearish movement but breaks upward
-
+        # ==========================
+        # Bullish CHOCH
+        # ==========================
         if (
             bearish_context
             and current["close"] > previous_high
         ):
-            return "BUY"
+            return {
+                "type": "BULLISH_CHOCH",
+                "signal": "BUY",
+                "level": previous_high
+            }
 
-
-
-        # CHoCH bearish reversal
-        # Previous bullish movement but breaks downward
-
+        # ==========================
+        # Bearish CHOCH
+        # ==========================
         if (
             bullish_context
             and current["close"] < previous_low
         ):
-            return "SELL"
-
-
+            return {
+                "type": "BEARISH_CHOCH",
+                "signal": "SELL",
+                "level": previous_low
+            }
 
         return None
