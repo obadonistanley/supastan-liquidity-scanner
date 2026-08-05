@@ -26,68 +26,59 @@ class MarketStructure:
         bullish_context = last_close > first_close
         bearish_context = last_close < first_close
 
-        # ==========================
-        # BULLISH BOS
-        # Body must CLOSE above structure
-        # ==========================
-
-        if (
-            bullish_context
-            and current["close"] > previous_high
-        ):
-            return {
-                "type": "BULLISH_BOS",
-                "signal": "BUY",
-                "level": previous_high,
-                "confirmation": "BODY_CLOSE"
-            }
+        bos = None
+        choch = None
+        signal = None
 
         # ==========================
-        # BEARISH BOS
-        # Body must CLOSE below structure
+        # BULLISH STRUCTURE
         # ==========================
 
-        if (
-            bearish_context
-            and current["close"] < previous_low
-        ):
-            return {
-                "type": "BEARISH_BOS",
-                "signal": "SELL",
-                "level": previous_low,
-                "confirmation": "BODY_CLOSE"
-            }
+        if current["close"] > previous_high:
+
+            signal = "BUY"
+
+            if bullish_context:
+                bos = "BULLISH_BOS"
+
+            if bearish_context:
+                choch = "BULLISH_CHOCH"
 
         # ==========================
-        # BULLISH CHOCH
-        # Trend changes from bearish
+        # BEARISH STRUCTURE
         # ==========================
 
-        if (
-            bearish_context
-            and current["close"] > previous_high
-        ):
-            return {
-                "type": "BULLISH_CHOCH",
-                "signal": "BUY",
-                "level": previous_high,
-                "confirmation": "BODY_CLOSE"
-            }
+        elif current["close"] < previous_low:
 
-        # ==========================
-        # BEARISH CHOCH
-        # Trend changes from bullish
-        # ==========================
+            signal = "SELL"
 
-        if (
-            bullish_context
-            and current["close"] < previous_low
-        ):
-            return {
-                "type": "BEARISH_CHOCH",
-                "signal": "SELL",
-                "level": previous_low,
-                "confirmation": "BODY_CLOSE"
-            }
+            if bearish_context:
+                bos = "BEARISH_BOS"
 
-        return None
+            if bullish_context:
+                choch = "BEARISH_CHOCH"
+
+        if signal is None:
+            return None
+
+        return {
+
+            "signal": signal,
+
+            "bos": bos,
+
+            "choch": choch,
+
+            "previous_high": previous_high,
+
+            "previous_low": previous_low,
+
+            "confirmation": "BODY_CLOSE",
+
+            "market_context": (
+                "BULLISH"
+                if bullish_context
+                else "BEARISH"
+            )
+
+        }
