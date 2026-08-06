@@ -11,6 +11,9 @@ class Strategy:
 
     def run(self, symbol, timeframe="M5"):
 
+        # Force M5 only for Version 1.1
+        timeframe = "M5"
+
         candles = self.deriv.get_candles(
             symbol=symbol,
             timeframe=timeframe,
@@ -21,30 +24,26 @@ class Strategy:
             return {
                 "symbol": symbol,
                 "timeframe": timeframe,
-                "signal": "NO DATA"
+                "signal": "NO DATA",
+                "trend": None,
+                "order_block": None,
+                "liquidity": None,
+                "status": "NO DATA",
+                "candles": []
             }
 
         result = self.scanner.scan(
-            symbol,
             candles,
             timeframe
         )
 
         return {
-
             "symbol": symbol,
-
             "timeframe": timeframe,
-
-            "signal": result["signal"],
-
-            "trend": result["trend"],
-
-            "order_block": result["order_block"],
-
-            "liquidity": result["liquidity"],
-
-            "status": result["status"],
-
+            "signal": result.get("signal", "NO SIGNAL"),
+            "trend": result.get("trend"),
+            "order_block": result.get("order_block"),
+            "liquidity": result.get("liquidity"),
+            "status": result.get("status"),
             "candles": candles
         }
