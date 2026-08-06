@@ -15,15 +15,10 @@ class DerivAPI:
         self.timeframes = {
 
             "M1": 60,
-
             "M5": 300,
-
             "M15": 900,
-
             "H1": 3600,
-
             "H4": 14400,
-
             "D1": 86400
 
         }
@@ -33,6 +28,7 @@ class DerivAPI:
 
         mapping = {
 
+            # Forex
             "GBPUSD": "frxGBPUSD",
             "GBPJPY": "frxGBPJPY",
             "EURJPY": "frxEURJPY",
@@ -41,11 +37,29 @@ class DerivAPI:
             "USDCAD": "frxUSDCAD",
             "GBPNZD": "frxGBPNZD",
 
+            # Crypto / Gold
             "XAUUSD": "frxXAUUSD",
             "BTCUSD": "cryBTCUSD",
 
-            "US30": "OTC_US30",
-            "NAS": "OTC_NDX100"
+            # Synthetic Indices
+            "R_10": "R_10",
+            "R_10 1s": "R_10",
+
+            "R_25": "R_25",
+            "R_25 1s": "R_25",
+
+            "R_50": "R_50",
+
+            "R_75": "R_75",
+            "R_75 1s": "R_75",
+
+            "R_100": "R_100",
+
+            "R_150 1s": "R_150",
+
+            # Indices
+            "US30": "US30",
+            "NAS": "NAS100"
 
         }
 
@@ -55,15 +69,10 @@ class DerivAPI:
 
 
     def get_candles(
-
         self,
-
         symbol,
-
         timeframe="M5",
-
         count=250
-
     ):
 
 
@@ -71,39 +80,56 @@ class DerivAPI:
 
 
         granularity = self.timeframes.get(
-
             timeframe.upper(),
-
             300
-
         )
 
 
-        ws = websocket.create_connection(self.url)
+        try:
+
+            ws = websocket.create_connection(
+                self.url,
+                timeout=10
+            )
 
 
-        request = {
+            request = {
 
-            "ticks_history": symbol,
+                "ticks_history": symbol,
 
-            "count": count,
+                "count": count,
 
-            "end": "latest",
+                "end": "latest",
 
-            "style": "candles",
+                "style": "candles",
 
-            "granularity": granularity
+                "granularity": granularity
 
-        }
-
-
-        ws.send(json.dumps(request))
+            }
 
 
-        response = json.loads(ws.recv())
+            ws.send(
+                json.dumps(request)
+            )
 
 
-        ws.close()
+            response = json.loads(
+                ws.recv()
+            )
+
+
+            ws.close()
+
+
+        except Exception as e:
+
+            print(
+                "Deriv connection error:",
+                e
+            )
+
+            return []
+
 
 
         candles = []
@@ -116,7 +142,6 @@ class DerivAPI:
 
 
         for candle in response["candles"]:
-
 
             candles.append({
 
@@ -140,52 +165,16 @@ class DerivAPI:
 
     def get_multi_timeframe(self, symbol):
 
-
         return {
 
+            "D1": self.get_candles(symbol, "D1"),
 
-            "D1": self.get_candles(
+            "H4": self.get_candles(symbol, "H4"),
 
-                symbol,
+            "H1": self.get_candles(symbol, "H1"),
 
-                "D1"
+            "M5": self.get_candles(symbol, "M5"),
 
-            ),
-
-
-            "H4": self.get_candles(
-
-                symbol,
-
-                "H4"
-
-            ),
-
-
-            "H1": self.get_candles(
-
-                symbol,
-
-                "H1"
-
-            ),
-
-
-            "M5": self.get_candles(
-
-                symbol,
-
-                "M5"
-
-            ),
-
-
-            "M1": self.get_candles(
-
-                symbol,
-
-                "M1"
-
-            )
+            "M1": self.get_candles(symbol, "M1")
 
         }
