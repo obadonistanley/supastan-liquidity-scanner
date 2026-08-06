@@ -5,7 +5,6 @@ from telegram_bot import send_signal
 
 class Strategy:
 
-
     def __init__(self):
 
         self.scanner = Scanner()
@@ -13,9 +12,7 @@ class Strategy:
         self.deriv = DerivAPI()
 
 
-
     def run(self, symbol, timeframe):
-
 
         candles = self.deriv.get_candles(
 
@@ -33,13 +30,10 @@ class Strategy:
             return {
 
                 "symbol": symbol,
-
                 "timeframe": timeframe,
-
                 "signal": "NO DATA"
 
             }
-
 
 
         result = self.scanner.scan(
@@ -52,7 +46,6 @@ class Strategy:
 
 
         signal = result["signal"]
-
 
 
         response = {
@@ -77,10 +70,12 @@ class Strategy:
 
                 "WAITING"
 
-            )
+            ),
+
+            # Added for Telegram chart generation
+            "candles": candles
 
         }
-
 
 
         # Send Telegram alert only on BUY/SELL sweep
@@ -88,7 +83,6 @@ class Strategy:
         if signal in ["BUY", "SELL"]:
 
             send_signal(response)
-
 
 
         return response
