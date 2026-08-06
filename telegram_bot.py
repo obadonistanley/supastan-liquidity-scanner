@@ -1,6 +1,6 @@
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -10,35 +10,25 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 def send_signal(result):
 
     if not BOT_TOKEN or not CHAT_ID:
-
-        print("Telegram credentials missing")
-
+        print("❌ Telegram credentials missing")
         return False
-
 
     liquidity = result.get("liquidity", {})
 
-    sweep_type = liquidity.get("sweep", "Unknown")
-    sweep_level = liquidity.get("level", "Unknown")
-    sweep_price = liquidity.get("price", "Unknown")
-
-    scan_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-
-
     message = f"""
-🚨 SUPASTAN AI LIQUIDITY ALERT
+🚨 SUPASTAN AI LIQUIDITY SWEEP ALERT
 
 📊 Market: {result.get("symbol")}
 
-⏱ Timeframe: {result.get("timeframe")}
+⏰ Timeframe: {result.get("timeframe")}
 
 🎯 Signal: {result.get("signal")}
 
-💧 Sweep Type: {sweep_type}
+💧 Sweep: {liquidity.get("sweep", "N/A")}
 
-📍 Sweep Level: {sweep_level}
+📍 Liquidity Level: {liquidity.get("level", "N/A")}
 
-💰 Sweep Price: {sweep_price}
+💰 Current Price: {liquidity.get("price", "N/A")}
 
 📈 Trend: {result.get("trend")}
 
@@ -46,41 +36,31 @@ def send_signal(result):
 {result.get("status")}
 
 🕒 Scan Time:
-{scan_time}
+{datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")}
 
-⚡ Powered by Supastan AI
+⚡ Supastan AI Liquidity Scanner
 """
 
-
-    url = (
-        f"https://api.telegram.org/"
-        f"bot{BOT_TOKEN}/sendMessage"
-    )
-
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
     try:
 
         response = requests.post(
-
             url,
-
             data={
-
                 "chat_id": CHAT_ID,
-
                 "text": message
-
             },
-
             timeout=10
-
         )
 
-        return response.status_code == 200
+        if response.status_code == 200:
+            print("✅ Telegram alert sent")
+            return True
 
+        print("Telegram Error:", response.text)
+        return False
 
     except Exception as e:
-
-        print("Telegram error:", e)
-
+        print("Telegram Exception:", e)
         return False
