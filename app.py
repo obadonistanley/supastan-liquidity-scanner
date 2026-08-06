@@ -3,7 +3,9 @@ from fastapi import FastAPI
 from strategy import Strategy
 from config import MARKETS
 
+
 app = FastAPI()
+
 
 scanner = Strategy()
 
@@ -14,7 +16,8 @@ def home():
     return {
         "name": "Supastan AI Liquidity Scanner",
         "version": "1.0",
-        "status": "ONLINE"
+        "status": "ONLINE",
+        "strategy": "SMC Liquidity Sweep + BOS + CHOCH + Order Block Retest"
     }
 
 
@@ -23,26 +26,58 @@ def ai_scan():
 
     signals = []
 
+
+    strategies = [
+        {
+            "higher_tf": "D1",
+            "entry_tf": "M5"
+        },
+        {
+            "higher_tf": "H4",
+            "entry_tf": "M5"
+        },
+        {
+            "higher_tf": "H1",
+            "entry_tf": "M5"
+        },
+        {
+            "higher_tf": "M5",
+            "entry_tf": "M1"
+        }
+    ]
+
+
     for symbol in MARKETS:
 
-        for timeframe in ["H4", "H1", "M5"]:
+
+        for setup in strategies:
 
             try:
 
                 result = scanner.run(
                     symbol,
-                    timeframe
+                    setup["higher_tf"],
+                    setup["entry_tf"]
                 )
 
-                if result["signal"] != "NO SWEEP":
+
+                if result.get("signal") == "BUY" or result.get("signal") == "SELL":
 
                     signals.append(result)
 
+
             except Exception as e:
 
-                print(symbol, timeframe, e)
+                print(
+                    symbol,
+                    setup,
+                    e
+                )
+
 
     return {
+
+        "scanner": "Supastan AI Liquidity Scanner",
 
         "total_signals": len(signals),
 
