@@ -1,13 +1,24 @@
 from fastapi import FastAPI
+import asyncio
 
 from strategy import Strategy
 from config import MARKETS
+from background import auto_scan
 
 
 app = FastAPI()
 
 
 scanner = Strategy()
+
+
+
+@app.on_event("startup")
+async def startup_event():
+
+    asyncio.create_task(
+        auto_scan()
+    )
 
 
 
@@ -28,34 +39,21 @@ def home():
 
 
 
-
 @app.get("/ai")
 def ai_scan():
 
     signals = []
 
 
-    strategies = [
+    timeframes = [
 
-        {
-            "higher_tf": "D1",
-            "entry_tf": "M5"
-        },
+        "D1",
 
-        {
-            "higher_tf": "H4",
-            "entry_tf": "M5"
-        },
+        "H4",
 
-        {
-            "higher_tf": "H1",
-            "entry_tf": "M5"
-        },
+        "H1",
 
-        {
-            "higher_tf": "M5",
-            "entry_tf": "M1"
-        }
+        "M5"
 
     ]
 
@@ -64,7 +62,7 @@ def ai_scan():
     for symbol in MARKETS:
 
 
-        for setup in strategies:
+        for timeframe in timeframes:
 
 
             try:
@@ -74,12 +72,9 @@ def ai_scan():
 
                     symbol,
 
-                    setup["higher_tf"],
-
-                    setup["entry_tf"]
+                    timeframe
 
                 )
-
 
 
                 if result.get("signal") in [
@@ -101,7 +96,7 @@ def ai_scan():
 
                     symbol,
 
-                    setup,
+                    timeframe,
 
                     e
 
