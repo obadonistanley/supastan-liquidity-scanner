@@ -1,63 +1,32 @@
 import time
 
+from config import MARKETS
 from strategy import Strategy
 
 scanner = Strategy()
 
-symbols = [
-    "R_10",
-    "R_25",
-    "R_50",
-    "R_75",
-    "R_100",
-    "BOOM300",
-    "BOOM500",
-    "CRASH300",
-    "CRASH500",
-]
-
-modes = [
-    "H4",
-    "H1",
-    "M5"
-]
-
-last_signal = {}
-
 while True:
 
-    for symbol in symbols:
+    print("\n========== NEW SCAN ==========\n")
 
-        for mode in modes:
+    for symbol in MARKETS:
 
-            try:
+        try:
 
-                result = scanner.run(symbol, mode)
+            print(f"Scanning {symbol}...")
 
-                liquidity = result.get("liquidity")
+            h4 = scanner.run(symbol, "H4")
+            h1 = scanner.run(symbol, "H1")
+            m5 = scanner.run(symbol, "M5")
 
-                if liquidity:
+            print("H4:", h4)
+            print("H1:", h1)
+            print("M5:", m5)
 
-                    key = f"{symbol}_{mode}"
+        except Exception as e:
 
-                    current = (
-                        liquidity["signal"],
-                        liquidity["level"]
-                    )
+            print(symbol, e)
 
-                    if last_signal.get(key) != current:
+    print("\nWaiting 60 seconds...\n")
 
-                        print(
-                            f"{symbol} | {mode} | "
-                            f"{liquidity['signal']} "
-                            f"Liquidity Sweep @ "
-                            f"{liquidity['level']}"
-                        )
-
-                        last_signal[key] = current
-
-            except Exception as e:
-
-                print(symbol, mode, e)
-
-    time.sleep(10)
+    time.sleep(60)
