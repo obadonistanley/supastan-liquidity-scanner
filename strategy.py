@@ -1,6 +1,5 @@
 from scanner import Scanner
 from data.deriv import DerivAPI
-from telegram_bot import send_signal
 
 
 class Strategy:
@@ -8,81 +7,44 @@ class Strategy:
     def __init__(self):
 
         self.scanner = Scanner()
-
         self.deriv = DerivAPI()
 
-
-    def run(self, symbol, timeframe):
+    def run(self, symbol, timeframe="M5"):
 
         candles = self.deriv.get_candles(
-
             symbol=symbol,
-
             timeframe=timeframe,
-
             count=200
-
         )
 
-
         if not candles:
-
             return {
-
                 "symbol": symbol,
                 "timeframe": timeframe,
                 "signal": "NO DATA"
-
             }
 
-
         result = self.scanner.scan(
-
+            symbol,
             candles,
-
             timeframe
-
         )
 
-
-        signal = result["signal"]
-
-
-        response = {
+        return {
 
             "symbol": symbol,
 
             "timeframe": timeframe,
 
-            "signal": signal,
+            "signal": result["signal"],
 
             "trend": result["trend"],
 
+            "order_block": result["order_block"],
+
             "liquidity": result["liquidity"],
 
-            "status": (
+            "status": result["status"],
 
-                "LIQUIDITY SWEEP DETECTED"
-
-                if result["liquidity"]
-
-                else
-
-                "WAITING"
-
-            ),
-
-            # Added for Telegram chart generation
             "candles": candles
-
         }
-
-
-        # Send Telegram alert only on BUY/SELL sweep
-
-        if signal in ["BUY", "SELL"]:
-
-            send_signal(response)
-
-
-        return response
