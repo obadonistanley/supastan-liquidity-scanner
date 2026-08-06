@@ -1,88 +1,131 @@
 class LiquiditySweep:
 
+
     def __init__(self):
         pass
 
+
+
     def detect(self, candles, timeframe="M5"):
+
 
         if len(candles) < 30:
             return None
 
+
         timeframe = timeframe.upper()
 
-        # Scan only the latest 10 candles
-        for i in range(len(candles)-10, len(candles)):
 
-            current = candles[i]
+        # Check latest candle only
+        current = candles[-1]
 
-            previous = candles[max(0, i-20):i]
 
-            if len(previous) < 10:
-                continue
+        previous = candles[-21:-1]
 
-            previous_high = max(c["high"] for c in previous)
-            previous_low = min(c["low"] for c in previous)
 
-            body = abs(current["close"] - current["open"])
+        if len(previous) < 10:
+            return None
 
-            upper_wick = current["high"] - max(
+
+
+        previous_high = max(
+            c["high"] for c in previous
+        )
+
+
+        previous_low = min(
+            c["low"] for c in previous
+        )
+
+
+
+        body = abs(
+            current["close"] - current["open"]
+        )
+
+
+        upper_wick = (
+            current["high"]
+            -
+            max(
                 current["open"],
                 current["close"]
             )
+        )
 
-            lower_wick = min(
+
+        lower_wick = (
+            min(
                 current["open"],
                 current["close"]
-            ) - current["low"]
+            )
+            -
+            current["low"]
+        )
 
-            # SELL Sweep
-            if (
-                current["high"] > previous_high
-                and current["close"] < previous_high
-                and upper_wick > body
-            ):
 
-                return {
+        # avoid division problems
+        if body == 0:
+            body = 0.00001
 
-                    "signal": "SELL",
 
-                    "sweep": "WICK",
 
-                    "level": previous_high,
+        # SELL liquidity sweep
+        if (
 
-                    "timeframe": timeframe,
+            current["high"] > previous_high
 
-                    "price": current["high"],
+            and current["close"] < previous_high
 
-                    "time": current.get("time"),
+            and upper_wick > body * 1.2
 
-                    "index": i
+        ):
 
-                }
+            return {
 
-            # BUY Sweep
-            if (
-                current["low"] < previous_low
-                and current["close"] > previous_low
-                and lower_wick > body
-            ):
+                "signal": "SELL",
 
-                return {
+                "sweep": "WICK",
 
-                    "signal": "BUY",
+                "level": previous_high,
 
-                    "sweep": "WICK",
+                "timeframe": timeframe,
 
-                    "level": previous_low,
+                "price": current["high"],
 
-                    "timeframe": timeframe,
+                "time": current.get("time")
 
-                    "price": current["low"],
+            }
 
-                    "time": current.get("time"),
 
-                    "index": i
 
-                }
+        # BUY liquidity sweep
+        if (
+
+            current["low"] < previous_low
+
+            and current["close"] > previous_low
+
+            and lower_wick > body * 1.2
+
+        ):
+
+            return {
+
+                "signal": "BUY",
+
+                "sweep": "WICK",
+
+                "level": previous_low,
+
+                "timeframe": timeframe,
+
+                "price": current["low"],
+
+                "time": current.get("time")
+
+            }
+
+
 
         return None
