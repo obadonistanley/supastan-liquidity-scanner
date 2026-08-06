@@ -35,13 +35,13 @@ class OrderBlockDetector:
             ):
 
                 return OrderBlock(
-                    id=f"BULL_{current['epoch']}",
+                    id=f"BULL_{current['time']}",
                     type="bullish",
                     high=current["high"],
                     low=current["low"],
                     open=current["open"],
                     close=current["close"],
-                    time=current["epoch"]
+                    time=current["time"]
                 )
 
             # -------------------------
@@ -54,13 +54,13 @@ class OrderBlockDetector:
             ):
 
                 return OrderBlock(
-                    id=f"BEAR_{current['epoch']}",
+                    id=f"BEAR_{current['time']}",
                     type="bearish",
                     high=current["high"],
                     low=current["low"],
                     open=current["open"],
                     close=current["close"],
-                    time=current["epoch"]
+                    time=current["time"]
                 )
 
         return None
