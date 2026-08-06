@@ -1,7 +1,6 @@
 from utils.trend import TrendFilter
 from smc.order_block import OrderBlockDetector
 from smc.liquidity import LiquiditySweep
-from signal_memory import SignalMemory
 
 
 class Scanner:
@@ -11,11 +10,10 @@ class Scanner:
         self.trend = TrendFilter()
         self.order_block = OrderBlockDetector()
         self.liquidity = LiquiditySweep()
-        self.memory = SignalMemory()
 
-    def scan(self, symbol, candles, timeframe="M5"):
+    def scan(self, candles, timeframe="M5"):
 
-        # Detect trend
+        # Detect M5 trend
         trend = self.trend.detect(candles)
 
         # Detect latest Order Block
@@ -34,28 +32,24 @@ class Scanner:
 
             if liquidity:
 
-                # Prevent duplicate alerts from the same Order Block
-                if not self.memory.is_new(
-                    symbol,
-                    liquidity["order_block_id"]
+                # BUY only in UPTREND with bullish Order Block
+                if (
+                    trend == "UPTREND"
+                    and order_block.type == "bullish"
+                    and liquidity["signal"] == "BUY"
                 ):
+                    signal = "BUY"
 
-                    return {
-                        "signal": "NO SIGNAL",
-                        "timeframe": timeframe,
-                        "trend": trend,
-                        "order_block": {
-                            "id": order_block.id,
-                            "type": order_block.type,
-                            "high": order_block.high,
-                            "low": order_block.low,
-                            "time": order_block.time,
-                        },
-                        "liquidity": None,
-                        "status": "ORDER BLOCK ALREADY ALERTED"
-                    }
+                # SELL only in DOWNTREND with bearish Order Block
+                elif (
+                    trend == "DOWNTREND"
+                    and order_block.type == "bearish"
+                    and liquidity["signal"] == "SELL"
+                ):
+                    signal = "SELL"
 
-                signal = liquidity["signal"]
+                else:
+                    liquidity = None
 
         return {
 
@@ -81,7 +75,7 @@ class Scanner:
 
             "status": (
                 "SIGNAL DETECTED"
-                if liquidity
+                if signal in ("BUY", "SELL")
                 else "WAITING"
             )
         }
