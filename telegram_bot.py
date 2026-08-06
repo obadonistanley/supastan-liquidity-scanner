@@ -1,41 +1,84 @@
 import os
 import requests
 
+
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 
+
 def send_signal(result):
 
+
     if not BOT_TOKEN or not CHAT_ID:
-        return
+
+        print("Telegram credentials missing")
+
+        return False
+
+
 
     message = f"""
-🚨 SUPASTAN AI SIGNAL
+🚨 SUPASTAN AI LIQUIDITY ALERT
 
-📊 Symbol: {result['symbol']}
-📈 Mode: {result['mode']}
-🎯 Signal: {result['final_signal']}
+📊 Market: {result.get('symbol')}
 
-Entry:
-{result['trade_plan']['entry']}
+⏱ Timeframe: {result.get('timeframe')}
 
-Stop Loss:
-{result['trade_plan']['stop_loss']}
+🎯 Signal: {result.get('signal')}
 
-Take Profit:
-{result['trade_plan']['take_profit']}
+Setup:
+Wick Liquidity Sweep
 
-Risk Reward:
-{result['trade_plan']['risk_reward']}
+Trend:
+{result.get('trend')}
+
+Status:
+{result.get('status')}
 """
 
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
-    requests.post(
-        url,
-        data={
-            "chat_id": CHAT_ID,
-            "text": message
-        }
+
+    url = (
+        f"https://api.telegram.org/"
+        f"bot{BOT_TOKEN}/sendMessage"
     )
+
+
+
+    try:
+
+        response = requests.post(
+
+            url,
+
+            data={
+
+                "chat_id": CHAT_ID,
+
+                "text": message
+
+            },
+
+            timeout=10
+
+        )
+
+
+        return response.status_code == 200
+
+
+
+    except Exception as e:
+
+
+        print(
+
+            "Telegram error:",
+
+            e
+
+        )
+
+
+        return False
