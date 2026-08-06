@@ -1,63 +1,51 @@
 from fastapi import FastAPI
 
 from strategy import Strategy
+from config import MARKETS
 
-app = FastAPI(
-    title="Supastan AI Liquidity Scanner",
-    version="1.0"
-)
+app = FastAPI()
 
-strategy = Strategy()
+scanner = Strategy()
 
 
 @app.get("/")
 def home():
 
     return {
-        "status": "online",
-        "project": "Supastan AI Liquidity Scanner v1.0"
+        "name": "Supastan AI Liquidity Scanner",
+        "version": "1.0",
+        "status": "ONLINE"
     }
 
 
-@app.get("/api")
-def api():
+@app.get("/ai")
+def ai_scan():
+
+    signals = []
+
+    for symbol in MARKETS:
+
+        for timeframe in ["H4", "H1", "M5"]:
+
+            try:
+
+                result = scanner.run(
+                    symbol,
+                    timeframe
+                )
+
+                if result["signal"] != "NO SWEEP":
+
+                    signals.append(result)
+
+            except Exception as e:
+
+                print(symbol, timeframe, e)
 
     return {
-        "status": "running"
-    }
 
+        "total_signals": len(signals),
 
-@app.get("/scan/{symbol}")
-def scan(symbol: str):
-
-    return {
-
-        "symbol": symbol,
-
-        "H4": strategy.run(symbol, "H4"),
-
-        "H1": strategy.run(symbol, "H1"),
-
-        "M5": strategy.run(symbol, "M5")
+        "signals": signals
 
     }
-
-
-@app.get("/strategy/{symbol}/{timeframe}")
-def run_strategy(
-    symbol: str,
-    timeframe: str
-):
-
-    timeframe = timeframe.upper()
-
-    if timeframe not in ["H4", "H1", "M5"]:
-
-        return {
-            "error": "Choose H4, H1 or M5"
-        }
-
-    return strategy.run(
-        symbol,
-        timeframe
-    )
