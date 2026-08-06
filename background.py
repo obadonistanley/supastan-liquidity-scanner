@@ -10,6 +10,90 @@ strategy = Strategy()
 memory = SignalMemory()
 
 
+FOREX = [
+
+    "GBPUSD",
+    "GBPJPY",
+    "EURJPY",
+    "NZDJPY",
+    "EURUSD",
+    "USDCAD",
+    "GBPNZD",
+    "XAUUSD",
+    "BTCUSD"
+
+]
+
+
+DERIV = [
+
+    "R_10",
+    "R_10_1S",
+    "R_25",
+    "R_25_1S",
+    "R_50",
+    "R_75",
+    "R_75_1S",
+    "R_100",
+    "R_150_1S"
+
+]
+
+
+INDICES = [
+
+    "US30",
+    "NAS"
+
+]
+
+
+def get_timeframes(symbol):
+
+    if symbol in FOREX:
+
+        return [
+
+            "D1",
+
+            "H4",
+
+            "H1"
+
+        ]
+
+
+    if symbol in DERIV:
+
+        return [
+
+            "H4",
+
+            "H1",
+
+            "M5"
+
+        ]
+
+
+    if symbol in INDICES:
+
+        return [
+
+            "H4",
+
+            "H1"
+
+        ]
+
+
+    return [
+
+        "H1"
+
+    ]
+
+
 
 async def auto_scan():
 
@@ -20,22 +104,9 @@ async def auto_scan():
 
         for symbol in MARKETS:
 
-
-            for timeframe in [
-
-                "D1",
-
-                "H4",
-
-                "H1",
-
-                "M5"
-
-            ]:
-
+            for timeframe in get_timeframes(symbol):
 
                 try:
-
 
                     result = strategy.run(
 
@@ -54,7 +125,6 @@ async def auto_scan():
 
                     ]:
 
-
                         if memory.is_new(
 
                             result["symbol"],
@@ -65,7 +135,6 @@ async def auto_scan():
 
                         ):
 
-
                             print(
 
                                 "✅ NEW SIGNAL:",
@@ -74,9 +143,7 @@ async def auto_scan():
 
                             )
 
-
                         else:
-
 
                             print(
 
@@ -93,7 +160,6 @@ async def auto_scan():
 
                 except Exception as e:
 
-
                     print(
 
                         "❌ Scan error:",
@@ -106,12 +172,6 @@ async def auto_scan():
 
                     )
 
-
-        print(
-
-            "⏳ Waiting 60 seconds..."
-
-        )
-
+        print("⏳ Waiting 60 seconds...")
 
         await asyncio.sleep(60)
