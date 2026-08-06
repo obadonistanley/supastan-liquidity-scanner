@@ -5,26 +5,26 @@ class LiquiditySweep:
         if len(candles) < 55:
             return None
 
-        tolerance = 0.0005
-
         last = candles[-1]
 
-        # Search between 5 and 50 candles back
+        tolerance = 0.0005
+
+        # Search equal highs/lows between 5 and 50 candles back
         for i in range(len(candles) - 50, len(candles) - 5):
 
-            c1 = candles[i]
+            first = candles[i]
 
             for j in range(i + 1, len(candles) - 1):
 
-                c2 = candles[j]
+                second = candles[j]
 
-                # ==========================
+                # =========================
                 # BUY - Equal Lows
-                # ==========================
+                # =========================
 
-                if abs(c1["low"] - c2["low"]) <= tolerance:
+                if abs(first["low"] - second["low"]) <= tolerance:
 
-                    level = min(c1["low"], c2["low"])
+                    level = (first["low"] + second["low"]) / 2
 
                     if (
                         last["low"] < level
@@ -32,24 +32,21 @@ class LiquiditySweep:
                     ):
 
                         return {
-
                             "signal": "BUY",
-
                             "sweep": "WICK",
-
                             "level": round(level, 5),
-
-                            "price": last["close"]
-
+                            "price": last["close"],
+                            "timeframe": "",
+                            "time": last.get("time")
                         }
 
-                # ==========================
+                # =========================
                 # SELL - Equal Highs
-                # ==========================
+                # =========================
 
-                if abs(c1["high"] - c2["high"]) <= tolerance:
+                if abs(first["high"] - second["high"]) <= tolerance:
 
-                    level = max(c1["high"], c2["high"])
+                    level = (first["high"] + second["high"]) / 2
 
                     if (
                         last["high"] > level
@@ -57,15 +54,12 @@ class LiquiditySweep:
                     ):
 
                         return {
-
                             "signal": "SELL",
-
                             "sweep": "WICK",
-
                             "level": round(level, 5),
-
-                            "price": last["close"]
-
+                            "price": last["close"],
+                            "timeframe": "",
+                            "time": last.get("time")
                         }
 
         return None
