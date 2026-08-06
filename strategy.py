@@ -13,17 +13,15 @@ class Strategy:
     def run(self, symbol, higher_tf, entry_tf):
 
 
-        # 1. Get higher timeframe candles
-        higher_candles = self.deriv.get_candles(
-
+        # Get higher timeframe candles
+        candles = self.deriv.get_candles(
             symbol=symbol,
             timeframe=higher_tf,
             count=200
-
         )
 
 
-        if not higher_candles:
+        if not candles:
 
             return {
 
@@ -35,77 +33,27 @@ class Strategy:
             }
 
 
-        # 2. Detect liquidity sweep on higher timeframe
-        higher_result = self.scanner.scan(
-
-            higher_candles,
+        result = self.scanner.scan(
+            candles,
             higher_tf
-
         )
 
 
-        liquidity = higher_result.get("liquidity")
-
-
-        if not liquidity:
+        if not result["liquidity"]:
 
             return {
 
                 "symbol": symbol,
+
                 "higher_tf": higher_tf,
+
                 "entry_tf": entry_tf,
-                "signal": "WAITING",
-                "reason": "No liquidity sweep"
+
+                "signal": "NO SWEEP",
+
+                "status": "WAITING"
 
             }
-
-
-
-        # 3. Get entry timeframe candles
-        entry_candles = self.deriv.get_candles(
-
-            symbol=symbol,
-            timeframe=entry_tf,
-            count=200
-
-        )
-
-
-        if not entry_candles:
-
-            return {
-
-                "symbol": symbol,
-                "higher_tf": higher_tf,
-                "entry_tf": entry_tf,
-                "signal": "NO ENTRY DATA"
-
-            }
-
-
-
-        # 4. Confirm BOS / CHOCH / Order Block
-        entry_result = self.scanner.scan(
-
-            entry_candles,
-            entry_tf
-
-        )
-
-
-
-        if entry_result.get("signal") not in ["BUY", "SELL"]:
-
-            return {
-
-                "symbol": symbol,
-                "higher_tf": higher_tf,
-                "entry_tf": entry_tf,
-                "signal": "WAITING",
-                "reason": "No BOS CHOCH confirmation"
-
-            }
-
 
 
         return {
@@ -116,18 +64,12 @@ class Strategy:
 
             "entry_tf": entry_tf,
 
-            "liquidity": liquidity,
+            "signal": result["signal"],
 
-            "structure": entry_result.get("structure"),
+            "trend": result["trend"],
 
-            "order_block": entry_result.get("order_block"),
+            "liquidity": result["liquidity"],
 
-            "signal": entry_result.get("signal"),
-
-            "confidence": entry_result.get("confidence"),
-
-            "score": entry_result.get("score"),
-
-            "quality": entry_result.get("quality")
+            "status": "LIQUIDITY SWEEP DETECTED"
 
         }
