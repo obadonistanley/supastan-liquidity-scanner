@@ -2,17 +2,18 @@ import asyncio
 
 from strategy import Strategy
 from config import MARKETS
+from signal_memory import SignalMemory
 
 
 strategy = Strategy()
+
+memory = SignalMemory()
 
 
 
 async def auto_scan():
 
-
     while True:
-
 
         print("🔎 Supastan AI Auto Scan Running...")
 
@@ -23,8 +24,11 @@ async def auto_scan():
             for timeframe in [
 
                 "D1",
+
                 "H4",
+
                 "H1",
+
                 "M5"
 
             ]:
@@ -51,13 +55,40 @@ async def auto_scan():
                     ]:
 
 
-                        print(
+                        if memory.is_new(
 
-                            "SIGNAL FOUND:",
+                            result["symbol"],
 
-                            result
+                            result["timeframe"],
 
-                        )
+                            result["signal"]
+
+                        ):
+
+
+                            print(
+
+                                "✅ NEW SIGNAL:",
+
+                                result
+
+                            )
+
+
+                        else:
+
+
+                            print(
+
+                                "⏭ Duplicate skipped:",
+
+                                result["symbol"],
+
+                                result["timeframe"],
+
+                                result["signal"]
+
+                            )
 
 
                 except Exception as e:
@@ -65,7 +96,7 @@ async def auto_scan():
 
                     print(
 
-                        "Scan error:",
+                        "❌ Scan error:",
 
                         symbol,
 
@@ -76,9 +107,10 @@ async def auto_scan():
                     )
 
 
-
         print(
-            "Waiting 60 seconds..."
+
+            "⏳ Waiting 60 seconds..."
+
         )
 
 
