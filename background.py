@@ -3,6 +3,7 @@ import asyncio
 from strategy import Strategy
 from config import MARKETS
 from signal_memory import SignalMemory
+from signals_store import add_signal
 
 
 strategy = Strategy()
@@ -134,6 +135,8 @@ async def auto_scan():
                             result["signal"]
 
                         ):
+
+                            add_signal(result)
 
                             print(
 
