@@ -1,13 +1,19 @@
 from scanner import Scanner
 from data.deriv import DerivAPI
+from telegram import TelegramBot
 
 
 class Strategy:
 
+
     def __init__(self):
 
         self.scanner = Scanner()
+
         self.deriv = DerivAPI()
+
+        self.telegram = TelegramBot()
+
 
 
     def run(self, symbol, timeframe):
@@ -47,18 +53,52 @@ class Strategy:
         )
 
 
+        signal = result["signal"]
+
+
+
+        # Send Telegram alert only when sweep is detected
+        if signal in ["BUY", "SELL"]:
+
+
+            message = f"""
+🚨 SUPASTAN AI LIQUIDITY ALERT
+
+Market: {symbol}
+
+Timeframe: {timeframe}
+
+Signal: {signal}
+
+Setup:
+Wick Liquidity Sweep
+
+Trend:
+{result['trend']}
+"""
+
+
+            self.telegram.send(message)
+
+
 
         return {
 
+
             "symbol": symbol,
+
 
             "timeframe": timeframe,
 
-            "signal": result["signal"],
+
+            "signal": signal,
+
 
             "trend": result["trend"],
 
+
             "liquidity": result["liquidity"],
+
 
             "status": (
 
