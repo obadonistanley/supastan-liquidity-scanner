@@ -1,71 +1,34 @@
-import pandas as pd
-
-
 class TrendFilter:
 
+    def __init__(self):
+        pass
+
+    def ema(self, values, period):
+
+        multiplier = 2 / (period + 1)
+
+        ema = values[0]
+
+        for price in values[1:]:
+            ema = (price - ema) * multiplier + ema
+
+        return ema
 
     def detect(self, candles):
 
-        closes = [
-            c["close"] for c in candles
-        ]
+        if len(candles) < 200:
+            return "SIDEWAYS"
 
+        closes = [c["close"] for c in candles]
 
-        if len(closes) < 200:
-            return "UNKNOWN"
+        ema50 = self.ema(closes[-100:], 50)
 
+        ema200 = self.ema(closes, 200)
 
-        df = pd.DataFrame(
-            closes,
-            columns=["close"]
-        )
-
-
-        ema50 = (
-            df["close"]
-            .ewm(span=50)
-            .mean()
-        )
-
-
-        ema200 = (
-            df["close"]
-            .ewm(span=200)
-            .mean()
-        )
-
-
-        current_price = closes[-1]
-
-        current_ema50 = ema50.iloc[-1]
-        current_ema200 = ema200.iloc[-1]
-
-
-        # Momentum check
-        previous_price = closes[-20]
-
-
-
-        # Strong bullish trend
-
-        if (
-            current_ema50 > current_ema200
-            and current_price > current_ema50
-            and current_price > previous_price
-        ):
+        if ema50 > ema200:
             return "BULLISH"
 
-
-
-        # Strong bearish trend
-
-        if (
-            current_ema50 < current_ema200
-            and current_price < current_ema50
-            and current_price < previous_price
-        ):
+        if ema50 < ema200:
             return "BEARISH"
-
-
 
         return "SIDEWAYS"
