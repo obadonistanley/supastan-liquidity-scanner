@@ -10,14 +10,17 @@ class Strategy:
         self.deriv = DerivAPI()
 
 
-    def run(self, symbol, higher_tf, entry_tf):
+    def run(self, symbol, timeframe):
 
 
-        # Get higher timeframe candles
         candles = self.deriv.get_candles(
+
             symbol=symbol,
-            timeframe=higher_tf,
+
+            timeframe=timeframe,
+
             count=200
+
         )
 
 
@@ -26,43 +29,30 @@ class Strategy:
             return {
 
                 "symbol": symbol,
-                "higher_tf": higher_tf,
-                "entry_tf": entry_tf,
+
+                "timeframe": timeframe,
+
                 "signal": "NO DATA"
 
             }
 
 
+
         result = self.scanner.scan(
+
             candles,
-            higher_tf
+
+            timeframe
+
         )
 
-
-        if not result["liquidity"]:
-
-            return {
-
-                "symbol": symbol,
-
-                "higher_tf": higher_tf,
-
-                "entry_tf": entry_tf,
-
-                "signal": "NO SWEEP",
-
-                "status": "WAITING"
-
-            }
 
 
         return {
 
             "symbol": symbol,
 
-            "higher_tf": higher_tf,
-
-            "entry_tf": entry_tf,
+            "timeframe": timeframe,
 
             "signal": result["signal"],
 
@@ -70,6 +60,16 @@ class Strategy:
 
             "liquidity": result["liquidity"],
 
-            "status": "LIQUIDITY SWEEP DETECTED"
+            "status": (
+
+                "LIQUIDITY SWEEP DETECTED"
+
+                if result["liquidity"]
+
+                else
+
+                "WAITING"
+
+            )
 
         }
