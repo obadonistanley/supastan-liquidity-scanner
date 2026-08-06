@@ -1,38 +1,63 @@
 import time
 
 from strategy import Strategy
-from telegram_bot import send_telegram
 
+scanner = Strategy()
 
-strategy = Strategy()
-
-SYMBOLS = [
+symbols = [
     "R_10",
     "R_25",
     "R_50",
     "R_75",
-    "R_100"
+    "R_100",
+    "BOOM300",
+    "BOOM500",
+    "CRASH300",
+    "CRASH500",
 ]
 
-MODES = [
-    "D1_H4",
+modes = [
+    "H4",
     "H1",
     "M5"
 ]
 
+last_signal = {}
 
 while True:
 
-    for symbol in SYMBOLS:
+    for symbol in symbols:
 
-        for mode in MODES:
+        for mode in modes:
 
-            result = strategy.run(symbol, mode)
+            try:
 
-            if result["final_signal"] != "NO TRADE":
+                result = scanner.run(symbol, mode)
 
-                send_telegram(result)
+                liquidity = result.get("liquidity")
 
-                print(result)
+                if liquidity:
 
-    time.sleep(60)
+                    key = f"{symbol}_{mode}"
+
+                    current = (
+                        liquidity["signal"],
+                        liquidity["level"]
+                    )
+
+                    if last_signal.get(key) != current:
+
+                        print(
+                            f"{symbol} | {mode} | "
+                            f"{liquidity['signal']} "
+                            f"Liquidity Sweep @ "
+                            f"{liquidity['level']}"
+                        )
+
+                        last_signal[key] = current
+
+            except Exception as e:
+
+                print(symbol, mode, e)
+
+    time.sleep(10)
