@@ -1,131 +1,71 @@
 class LiquiditySweep:
 
+    def detect(self, candles):
 
-    def __init__(self):
-        pass
-
-
-
-    def detect(self, candles, timeframe="M5"):
-
-
-        if len(candles) < 30:
+        if len(candles) < 55:
             return None
 
+        tolerance = 0.0005
 
-        timeframe = timeframe.upper()
+        last = candles[-1]
 
+        # Search between 5 and 50 candles back
+        for i in range(len(candles) - 50, len(candles) - 5):
 
-        # Check latest candle only
-        current = candles[-1]
+            c1 = candles[i]
 
+            for j in range(i + 1, len(candles) - 1):
 
-        previous = candles[-21:-1]
+                c2 = candles[j]
 
+                # ==========================
+                # BUY - Equal Lows
+                # ==========================
 
-        if len(previous) < 10:
-            return None
+                if abs(c1["low"] - c2["low"]) <= tolerance:
 
+                    level = min(c1["low"], c2["low"])
 
+                    if (
+                        last["low"] < level
+                        and last["close"] > level
+                    ):
 
-        previous_high = max(
-            c["high"] for c in previous
-        )
+                        return {
 
+                            "signal": "BUY",
 
-        previous_low = min(
-            c["low"] for c in previous
-        )
+                            "sweep": "WICK",
 
+                            "level": round(level, 5),
 
+                            "price": last["close"]
 
-        body = abs(
-            current["close"] - current["open"]
-        )
+                        }
 
+                # ==========================
+                # SELL - Equal Highs
+                # ==========================
 
-        upper_wick = (
-            current["high"]
-            -
-            max(
-                current["open"],
-                current["close"]
-            )
-        )
+                if abs(c1["high"] - c2["high"]) <= tolerance:
 
+                    level = max(c1["high"], c2["high"])
 
-        lower_wick = (
-            min(
-                current["open"],
-                current["close"]
-            )
-            -
-            current["low"]
-        )
+                    if (
+                        last["high"] > level
+                        and last["close"] < level
+                    ):
 
+                        return {
 
-        # avoid division problems
-        if body == 0:
-            body = 0.00001
+                            "signal": "SELL",
 
+                            "sweep": "WICK",
 
+                            "level": round(level, 5),
 
-        # SELL liquidity sweep
-        if (
+                            "price": last["close"]
 
-            current["high"] > previous_high
-
-            and current["close"] < previous_high
-
-            and upper_wick > body * 1.2
-
-        ):
-
-            return {
-
-                "signal": "SELL",
-
-                "sweep": "WICK",
-
-                "level": previous_high,
-
-                "timeframe": timeframe,
-
-                "price": current["high"],
-
-                "time": current.get("time")
-
-            }
-
-
-
-        # BUY liquidity sweep
-        if (
-
-            current["low"] < previous_low
-
-            and current["close"] > previous_low
-
-            and lower_wick > body * 1.2
-
-        ):
-
-            return {
-
-                "signal": "BUY",
-
-                "sweep": "WICK",
-
-                "level": previous_low,
-
-                "timeframe": timeframe,
-
-                "price": current["low"],
-
-                "time": current.get("time")
-
-            }
-
-
+                        }
 
         return None
