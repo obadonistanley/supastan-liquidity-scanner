@@ -4,6 +4,7 @@ from strategy import Strategy
 from config import MARKETS
 from signal_memory import SignalMemory
 from signals_store import add_signal
+from telegram_bot import send_signal
 
 strategy = Strategy()
 memory = SignalMemory()
@@ -39,6 +40,7 @@ INDICES = [
 
 
 def get_timeframes(symbol):
+
     if symbol in FOREX:
         return ["D1", "H4", "H1"]
 
@@ -52,6 +54,7 @@ def get_timeframes(symbol):
 
 
 async def auto_scan():
+
     while True:
 
         print("🔎 Supastan AI Auto Scan Running...")
@@ -73,6 +76,8 @@ async def auto_scan():
                         ):
 
                             add_signal(result)
+
+                            send_signal(result)
 
                             print("✅ NEW SIGNAL:", result)
 
