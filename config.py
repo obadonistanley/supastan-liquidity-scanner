@@ -1,5 +1,6 @@
 MARKETS = [
 
+    # Forex
     "GBPUSD",
     "GBPJPY",
     "EURJPY",
@@ -8,25 +9,31 @@ MARKETS = [
     "USDCAD",
     "GBPNZD",
 
+    # Metals & Crypto
     "XAUUSD",
     "BTCUSD",
 
+    # Deriv Synthetic Indices
     "R_10",
-    "R_10 1s",
+    "R_10_1S",
 
     "R_25",
-    "R_25 1s",
+    "R_25_1S",
 
     "R_50",
 
     "R_75",
-    "R_75 1s",
+    "R_75_1S",
 
     "R_100",
 
-    "R_150 1s",
+    "R_150_1S",
 
+    # Indices
     "US30",
     "NAS"
-
 ]
+
+# Telegram
+TELEGRAM_BOT_TOKEN = "YOUR_BOT_TOKEN"
+TELEGRAM_CHAT_ID = "YOUR_CHAT_ID"
