@@ -4,13 +4,12 @@ import asyncio
 from strategy import Strategy
 from config import MARKETS
 from background import auto_scan
+from signals_store import get_signals
 
 
 app = FastAPI()
 
-
 scanner = Strategy()
-
 
 
 @app.on_event("startup")
@@ -19,7 +18,6 @@ async def startup_event():
     asyncio.create_task(
         auto_scan()
     )
-
 
 
 @app.get("/")
@@ -38,12 +36,10 @@ def home():
     }
 
 
-
 @app.get("/ai")
 def ai_scan():
 
     signals = []
-
 
     timeframes = [
 
@@ -57,16 +53,11 @@ def ai_scan():
 
     ]
 
-
-
     for symbol in MARKETS:
-
 
         for timeframe in timeframes:
 
-
             try:
-
 
                 result = scanner.run(
 
@@ -75,7 +66,6 @@ def ai_scan():
                     timeframe
 
                 )
-
 
                 if result.get("signal") in [
 
@@ -87,10 +77,7 @@ def ai_scan():
 
                     signals.append(result)
 
-
-
             except Exception as e:
-
 
                 print(
 
@@ -102,20 +89,30 @@ def ai_scan():
 
                 )
 
-
-
     return {
-
 
         "scanner": "Supastan AI Liquidity Scanner",
 
-
         "strategy": "Liquidity Sweep Only",
-
 
         "total_signals": len(signals),
 
-
         "signals": signals
+
+    }
+
+
+@app.get("/signals")
+def signals():
+
+    return {
+
+        "scanner": "Supastan AI Liquidity Scanner",
+
+        "strategy": "Live Background Scanner",
+
+        "total": len(get_signals()),
+
+        "signals": get_signals()
 
     }
