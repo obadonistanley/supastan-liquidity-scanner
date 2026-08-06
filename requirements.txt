@@ -7,3 +7,5 @@ python-dotenv
 ccxt
 websockets
 websocket-client
+matplotlib
+mplfinance
