@@ -13,9 +13,11 @@ class Strategy:
     def run(self, symbol, timeframe):
 
         candles = self.deriv.get_candles(
-            symbol,
-            timeframe,
-            200
+
+            symbol=symbol,
+            timeframe=timeframe,
+            count=200
+
         )
 
         if not candles:
@@ -23,14 +25,16 @@ class Strategy:
             return {
 
                 "symbol": symbol,
-
-                "error": "No candle data"
+                "timeframe": timeframe,
+                "signal": "NO DATA"
 
             }
 
         result = self.scanner.scan(
+
             candles,
             timeframe
+
         )
 
         return {
@@ -41,10 +45,24 @@ class Strategy:
 
             "trend": result["trend"],
 
-            "signal": result["signal"],
-
             "liquidity": result["liquidity"],
 
-            "status": result["status"]
+            "signal": (
+                result["liquidity"]["signal"]
+                if result["liquidity"]
+                else "NO SWEEP"
+            ),
+
+            "status": (
+                "LIQUIDITY SWEEP"
+                if result["liquidity"]
+                else "WAITING"
+            ),
+
+            "confidence": result["confidence"],
+
+            "score": result["score"],
+
+            "quality": result["quality"]
 
         }
