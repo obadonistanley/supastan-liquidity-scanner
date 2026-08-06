@@ -1,27 +1,14 @@
-import time
-
-
 class SignalMemory:
 
     def __init__(self):
+        self.alerted = {}
 
-        self.memory = {}
+    def is_new(self, symbol, order_block_id):
 
-        self.expiry = 4 * 60 * 60  # 4 hours
+        last = self.alerted.get(symbol)
 
+        if last == order_block_id:
+            return False
 
-    def is_new(self, symbol, timeframe, signal):
-
-        key = f"{symbol}_{timeframe}_{signal}"
-
-        now = time.time()
-
-        if key in self.memory:
-
-            if now - self.memory[key] < self.expiry:
-
-                return False
-
-        self.memory[key] = now
-
+        self.alerted[symbol] = order_block_id
         return True
