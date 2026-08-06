@@ -28,24 +28,59 @@ class DerivAPI:
 
         }
 
+
+    def normalize_symbol(self, symbol):
+
+        mapping = {
+
+            "GBPUSD": "frxGBPUSD",
+            "GBPJPY": "frxGBPJPY",
+            "EURJPY": "frxEURJPY",
+            "NZDJPY": "frxNZDJPY",
+            "EURUSD": "frxEURUSD",
+            "USDCAD": "frxUSDCAD",
+            "GBPNZD": "frxGBPNZD",
+
+            "XAUUSD": "frxXAUUSD",
+            "BTCUSD": "cryBTCUSD",
+
+            "US30": "OTC_US30",
+            "NAS": "OTC_NDX100"
+
+        }
+
+
+        return mapping.get(symbol, symbol)
+
+
+
     def get_candles(
 
         self,
 
         symbol,
 
-        timeframe="M15",
+        timeframe="M5",
 
         count=250
 
     ):
 
+
+        symbol = self.normalize_symbol(symbol)
+
+
         granularity = self.timeframes.get(
+
             timeframe.upper(),
-            900
+
+            300
+
         )
 
+
         ws = websocket.create_connection(self.url)
+
 
         request = {
 
@@ -61,18 +96,27 @@ class DerivAPI:
 
         }
 
+
         ws.send(json.dumps(request))
+
 
         response = json.loads(ws.recv())
 
+
         ws.close()
+
 
         candles = []
 
+
         if "candles" not in response:
+
             return candles
 
+
+
         for candle in response["candles"]:
+
 
             candles.append({
 
@@ -88,20 +132,60 @@ class DerivAPI:
 
             })
 
+
         return candles
+
+
+
 
     def get_multi_timeframe(self, symbol):
 
+
         return {
 
-            "D1": self.get_candles(symbol, "D1"),
 
-            "H4": self.get_candles(symbol, "H4"),
+            "D1": self.get_candles(
 
-            "H1": self.get_candles(symbol, "H1"),
+                symbol,
 
-            "M5": self.get_candles(symbol, "M5"),
+                "D1"
 
-            "M1": self.get_candles(symbol, "M1")
+            ),
+
+
+            "H4": self.get_candles(
+
+                symbol,
+
+                "H4"
+
+            ),
+
+
+            "H1": self.get_candles(
+
+                symbol,
+
+                "H1"
+
+            ),
+
+
+            "M5": self.get_candles(
+
+                symbol,
+
+                "M5"
+
+            ),
+
+
+            "M1": self.get_candles(
+
+                symbol,
+
+                "M1"
+
+            )
 
         }
