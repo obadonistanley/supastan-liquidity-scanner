@@ -1,6 +1,6 @@
 class LiquiditySweep:
 
-    def detect(self, candles):
+    def detect(self, candles, timeframe=None):
 
         if len(candles) < 55:
             return None
@@ -19,7 +19,7 @@ class LiquiditySweep:
                 second = candles[j]
 
                 # =========================
-                # BUY - Equal Lows
+                # BUY - Equal Lows Liquidity Sweep
                 # =========================
 
                 if abs(first["low"] - second["low"]) <= tolerance:
@@ -36,12 +36,12 @@ class LiquiditySweep:
                             "sweep": "WICK",
                             "level": round(level, 5),
                             "price": last["close"],
-                            "timeframe": "",
+                            "timeframe": timeframe,
                             "time": last.get("time")
                         }
 
                 # =========================
-                # SELL - Equal Highs
+                # SELL - Equal Highs Liquidity Sweep
                 # =========================
 
                 if abs(first["high"] - second["high"]) <= tolerance:
@@ -58,7 +58,7 @@ class LiquiditySweep:
                             "sweep": "WICK",
                             "level": round(level, 5),
                             "price": last["close"],
-                            "timeframe": "",
+                            "timeframe": timeframe,
                             "time": last.get("time")
                         }
 
