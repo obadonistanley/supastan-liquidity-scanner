@@ -10,59 +10,124 @@ class Strategy:
         self.deriv = DerivAPI()
 
 
-    def run(self, symbol, timeframe):
+    def run(self, symbol, higher_tf, entry_tf):
 
-        candles = self.deriv.get_candles(
+
+        # 1. Get higher timeframe candles
+        higher_candles = self.deriv.get_candles(
 
             symbol=symbol,
-            timeframe=timeframe,
+            timeframe=higher_tf,
             count=200
 
         )
 
-        if not candles:
+
+        if not higher_candles:
 
             return {
 
                 "symbol": symbol,
-                "timeframe": timeframe,
+                "higher_tf": higher_tf,
+                "entry_tf": entry_tf,
                 "signal": "NO DATA"
 
             }
 
-        result = self.scanner.scan(
 
-            candles,
-            timeframe
+        # 2. Detect liquidity sweep on higher timeframe
+        higher_result = self.scanner.scan(
+
+            higher_candles,
+            higher_tf
 
         )
+
+
+        liquidity = higher_result.get("liquidity")
+
+
+        if not liquidity:
+
+            return {
+
+                "symbol": symbol,
+                "higher_tf": higher_tf,
+                "entry_tf": entry_tf,
+                "signal": "WAITING",
+                "reason": "No liquidity sweep"
+
+            }
+
+
+
+        # 3. Get entry timeframe candles
+        entry_candles = self.deriv.get_candles(
+
+            symbol=symbol,
+            timeframe=entry_tf,
+            count=200
+
+        )
+
+
+        if not entry_candles:
+
+            return {
+
+                "symbol": symbol,
+                "higher_tf": higher_tf,
+                "entry_tf": entry_tf,
+                "signal": "NO ENTRY DATA"
+
+            }
+
+
+
+        # 4. Confirm BOS / CHOCH / Order Block
+        entry_result = self.scanner.scan(
+
+            entry_candles,
+            entry_tf
+
+        )
+
+
+
+        if entry_result.get("signal") not in ["BUY", "SELL"]:
+
+            return {
+
+                "symbol": symbol,
+                "higher_tf": higher_tf,
+                "entry_tf": entry_tf,
+                "signal": "WAITING",
+                "reason": "No BOS CHOCH confirmation"
+
+            }
+
+
 
         return {
 
             "symbol": symbol,
 
-            "timeframe": timeframe,
+            "higher_tf": higher_tf,
 
-            "trend": result["trend"],
+            "entry_tf": entry_tf,
 
-            "liquidity": result["liquidity"],
+            "liquidity": liquidity,
 
-            "signal": (
-                result["liquidity"]["signal"]
-                if result["liquidity"]
-                else "NO SWEEP"
-            ),
+            "structure": entry_result.get("structure"),
 
-            "status": (
-                "LIQUIDITY SWEEP"
-                if result["liquidity"]
-                else "WAITING"
-            ),
+            "order_block": entry_result.get("order_block"),
 
-            "confidence": result["confidence"],
+            "signal": entry_result.get("signal"),
 
-            "score": result["score"],
+            "confidence": entry_result.get("confidence"),
 
-            "quality": result["quality"]
+            "score": entry_result.get("score"),
+
+            "quality": entry_result.get("quality")
 
         }
