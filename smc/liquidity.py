@@ -1,65 +1,52 @@
 class LiquiditySweep:
 
-    def detect(self, candles, timeframe=None):
+    def detect(self, candles, order_block, timeframe="M5"):
 
-        if len(candles) < 55:
+        if not candles or order_block is None:
             return None
 
         last = candles[-1]
 
-        tolerance = 0.0005
+        # ==========================
+        # BUY - Bullish Order Block Sweep
+        # ==========================
+        if order_block.type == "bullish":
 
-        # Search equal highs/lows between 5 and 50 candles back
-        for i in range(len(candles) - 50, len(candles) - 5):
+            # Wick enters the Order Block
+            if (
+                last["low"] <= order_block.low
+                and last["close"] > order_block.high
+            ):
 
-            first = candles[i]
+                return {
+                    "signal": "BUY",
+                    "sweep": "WICK",
+                    "price": last["close"],
+                    "level": order_block.high,
+                    "order_block_id": order_block.id,
+                    "timeframe": timeframe,
+                    "time": last.get("epoch")
+                }
 
-            for j in range(i + 1, len(candles) - 1):
+        # ==========================
+        # SELL - Bearish Order Block Sweep
+        # ==========================
+        if order_block.type == "bearish":
 
-                second = candles[j]
+            # Wick enters the Order Block
+            if (
+                last["high"] >= order_block.high
+                and last["close"] < order_block.low
+            ):
 
-                # =========================
-                # BUY - Equal Lows Liquidity Sweep
-                # =========================
-
-                if abs(first["low"] - second["low"]) <= tolerance:
-
-                    level = (first["low"] + second["low"]) / 2
-
-                    if (
-                        last["low"] < level
-                        and last["close"] > level
-                    ):
-
-                        return {
-                            "signal": "BUY",
-                            "sweep": "WICK",
-                            "level": round(level, 5),
-                            "price": last["close"],
-                            "timeframe": timeframe,
-                            "time": last.get("time")
-                        }
-
-                # =========================
-                # SELL - Equal Highs Liquidity Sweep
-                # =========================
-
-                if abs(first["high"] - second["high"]) <= tolerance:
-
-                    level = (first["high"] + second["high"]) / 2
-
-                    if (
-                        last["high"] > level
-                        and last["close"] < level
-                    ):
-
-                        return {
-                            "signal": "SELL",
-                            "sweep": "WICK",
-                            "level": round(level, 5),
-                            "price": last["close"],
-                            "timeframe": timeframe,
-                            "time": last.get("time")
-                        }
+                return {
+                    "signal": "SELL",
+                    "sweep": "WICK",
+                    "price": last["close"],
+                    "level": order_block.low,
+                    "order_block_id": order_block.id,
+                    "timeframe": timeframe,
+                    "time": last.get("epoch")
+                }
 
         return None
